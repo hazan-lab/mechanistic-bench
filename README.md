@@ -25,14 +25,33 @@ The suite is built around four requirements for each task:
 Transformer (flash-attn), RNN, LSTM, MLP-mixer, Mamba, and two hybrids —
 alternating attention+mamba **layer-wise** and **head-wise**.
 
+## Installation
+
+The project pins **torch 2.9.1 + CUDA 12.8** so that prebuilt wheels for
+`flash-attn`, `mamba-ssm`, and `causal-conv1d` are available (no source
+compile). The three libs are declared in `[tool.uv.sources]` in
+`pyproject.toml` with direct GitHub release URLs.
+
+```bash
+# core only
+uv sync
+
+# with GPU kernels (Linux + CUDA, cp312)
+uv sync --extra flash --extra mamba
+```
+
+If `uv sync` ever leaves stale CUDA sub-libraries on disk (symptom:
+`ImportError: libcudnn.so.9` / `libcusparseLt.so.0` / similar at `import
+torch`), force-reinstall the missing one:
+
+```bash
+uv pip install --force-reinstall nvidia-cudnn-cu12
+# or: nvidia-cusparselt-cu12, nvidia-nccl-cu12, nvidia-nvshmem-cu12
+```
+
 ## Quickstart
 
 ```bash
-uv sync
-# optional (Linux + CUDA only):
-uv pip install flash-attn --no-build-isolation
-uv pip install mamba-ssm causal-conv1d
-
 # tiny smoke test
 uv run python scripts/train.py \
     --task induction --arch transformer --scale 1m \
