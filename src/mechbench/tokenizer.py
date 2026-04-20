@@ -84,9 +84,9 @@ class Tokenizer:
                 tokenizer = cls.from_file(tokenizer_path, **eos_kwargs, **kwargs)
         else:
             tokenizer = cls.from_pretrained(identifier, **eos_kwargs, **kwargs)
-        if vocab_size is not None and vocab_size != tokenizer.vocab_size:
+        if vocab_size is not None and vocab_size < tokenizer.vocab_size:
             raise OLMoConfigurationError(
-                f"vocab size mismatch: config has {vocab_size}, tokenizer has {tokenizer.vocab_size}"
+                f"config vocab_size={vocab_size} is smaller than tokenizer vocab_size={tokenizer.vocab_size}"
             )
         return tokenizer
 
