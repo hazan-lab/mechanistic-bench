@@ -27,6 +27,7 @@ from .attention import CausalSelfAttention, MultiBranchHeadMixer
 from .common import RMSNorm, SwiGLU
 from .mamba import MambaBlock
 from .recurrent import ElmanRNN, LSTMMixer, MLPMixer
+from .stu import STUBlock
 
 
 @dataclass
@@ -46,6 +47,9 @@ class MechConfig:
     use_flash: bool = True
     # headwise hybrid
     n_attn_heads: int = 2   # used only when block_type == "headwise"
+    # stu
+    num_eigh: int = 24
+    use_hankel_L: bool = False
     # regularisation
     dropout: float = 0.0
     tie_embeddings: bool = True
@@ -64,6 +68,13 @@ def _build_mixer(block_type: str, cfg: MechConfig) -> nn.Module:
         return LSTMMixer(cfg.d_model)
     if block_type == "mlp":
         return MLPMixer(cfg.d_model, hidden_mult=cfg.mlp_hidden_mult)
+    if block_type == "stu":
+        return STUBlock(
+            cfg.d_model,
+            seq_len=cfg.max_seq_len,
+            num_eigh=cfg.num_eigh,
+            use_hankel_L=cfg.use_hankel_L,
+        )
     if block_type == "headwise":
         return MultiBranchHeadMixer(
             cfg.d_model,
