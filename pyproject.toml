@@ -15,6 +15,10 @@ dependencies = [
     "wandb>=0.19",
     "tqdm>=4.66",
     "pandas>=2.2",
+    "torchmetrics>=1.9.0",
+    "scikit-learn>=1.7.2",
+    "datasets>=4.8.4",
+    "cached-path>=1.8.10",
 ]
 
 [project.optional-dependencies]
@@ -48,3 +52,8 @@ packages = ["src/mechbench"]
 [tool.ruff]
 line-length = 110
 target-version = "py310"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
