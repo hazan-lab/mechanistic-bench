@@ -19,6 +19,7 @@ dependencies = [
     "scikit-learn>=1.7.2",
     "datasets>=4.8.4",
     "cached-path>=1.8.10",
+    "tokenizers>=0.22.2",
 ]
 
 [project.optional-dependencies]
