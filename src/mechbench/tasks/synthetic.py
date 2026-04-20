@@ -374,3 +374,319 @@ def sort_task(rng, batch, spec: TaskSpec):
     recs[:, 2 + k : 2 + 2 * k] = np.sort(payload, axis=1)
     mask[:, k + 1 : 2 * k + 1] = True
     return recs, mask
+
+
+# ---------------------------------------------------------------------------
+# Extended-reasoning tasks
+# ---------------------------------------------------------------------------
+
+
+def pattern_completion(rng, batch, spec: TaskSpec):
+    """Repeating pattern of period k in [2,6]; predict one full period after SEP."""
+    T = spec.seq_len
+    body_len = T // 2
+    recs, mask = _empty(batch, T)
+    for b in range(batch):
+        k = int(rng.integers(2, 7))
+        pattern = sample_content(rng, spec, (k,))
+        body = np.array([pattern[t % k] for t in range(body_len)], dtype=np.int32)
+        recs[b, 1 : 1 + body_len] = body
+        sep_pos = 1 + body_len
+        recs[b, sep_pos] = SEP
+        target_len = min(k, T - sep_pos - 1)
+        recs[b, sep_pos + 1 : sep_pos + 1 + target_len] = pattern[:target_len]
+        mask[b, sep_pos : sep_pos + target_len] = True
+    return recs, mask
+
+
+def compress(rng, batch, spec: TaskSpec):
+    """Dedupe body preserving order of first appearance."""
+    T = spec.seq_len
+    body_len = T // 3
+    recs, mask = _empty(batch, T)
+    n_unique = min(10, spec.n_content)
+    for b in range(batch):
+        alphabet = rng.choice(
+            np.arange(CONTENT_LO, spec.vocab_size), size=n_unique, replace=False
+        )
+        body = rng.choice(alphabet, size=body_len, replace=True).astype(np.int32)
+        recs[b, 1 : 1 + body_len] = body
+        sep_pos = 1 + body_len
+        recs[b, sep_pos] = SEP
+        seen: dict[int, None] = {}
+        deduped: list[int] = []
+        for tok in body.tolist():
+            if tok not in seen:
+                seen[tok] = None
+                deduped.append(tok)
+        out_len = min(len(deduped), T - sep_pos - 1)
+        recs[b, sep_pos + 1 : sep_pos + 1 + out_len] = deduped[:out_len]
+        mask[b, sep_pos : sep_pos + out_len] = True
+    return recs, mask
+
+
+def interleave(rng, batch, spec: TaskSpec):
+    """Body is interleave(a, b); predict a then b after SEP."""
+    T = spec.seq_len
+    k = T // 5
+    recs, mask = _empty(batch, T)
+    seq_a = sample_content(rng, spec, (batch, k))
+    seq_b = sample_content(rng, spec, (batch, k))
+    body = np.empty((batch, 2 * k), dtype=np.int32)
+    body[:, 0::2] = seq_a
+    body[:, 1::2] = seq_b
+    recs[:, 1 : 1 + 2 * k] = body
+    sep_pos = 1 + 2 * k
+    recs[:, sep_pos] = SEP
+    recs[:, sep_pos + 1 : sep_pos + 1 + k] = seq_a
+    recs[:, sep_pos + 1 + k : sep_pos + 1 + 2 * k] = seq_b
+    mask[:, sep_pos : sep_pos + 2 * k] = True
+    return recs, mask
+
+
+def longest_run(rng, batch, spec: TaskSpec):
+    """Predict the symbol that has the longest consecutive run in the body."""
+    T = spec.seq_len
+    body_len = T // 2
+    recs, mask = _empty(batch, T)
+    alpha = 8
+    symbols = np.arange(CONTENT_LO, CONTENT_LO + alpha, dtype=np.int32)
+    for b in range(batch):
+        body = rng.integers(CONTENT_LO, CONTENT_LO + alpha, size=body_len, dtype=np.int32)
+        # break incidental long runs
+        for t in range(2, body_len):
+            if body[t] == body[t - 1] == body[t - 2]:
+                alt = int(rng.integers(CONTENT_LO, CONTENT_LO + alpha))
+                if alt == body[t]:
+                    alt = CONTENT_LO + (alt + 1 - CONTENT_LO) % alpha
+                body[t] = alt
+        winner = int(rng.choice(symbols))
+        run_len = int(rng.integers(4, 9))
+        run_start = int(rng.integers(0, max(1, body_len - run_len + 1)))
+        body[run_start : run_start + run_len] = winner
+        if run_start > 0 and body[run_start - 1] == winner:
+            alt = CONTENT_LO + (winner + 1 - CONTENT_LO) % alpha
+            body[run_start - 1] = alt
+        if run_start + run_len < body_len and body[run_start + run_len] == winner:
+            alt = CONTENT_LO + (winner + 1 - CONTENT_LO) % alpha
+            body[run_start + run_len] = alt
+        recs[b, 1 : 1 + body_len] = body
+        sep_pos = 1 + body_len
+        recs[b, sep_pos] = SEP
+        recs[b, sep_pos + 1] = winner
+        mask[b, sep_pos] = True
+    return recs, mask
+
+
+def threshold(rng, batch, spec: TaskSpec, thresh: int = 3):
+    """Binary: does `query_tok` occur more than `thresh` times in the body?"""
+    T = spec.seq_len
+    body_len = T // 2
+    recs, mask = _empty(batch, T)
+    alpha = 8
+    body = rng.integers(CONTENT_LO, CONTENT_LO + alpha, size=(batch, body_len), dtype=np.int32)
+    recs[:, 1 : 1 + body_len] = body
+    sep_pos = 1 + body_len
+    recs[:, sep_pos] = SEP
+    q = rng.integers(CONTENT_LO, CONTENT_LO + alpha, size=batch, dtype=np.int32)
+    recs[np.arange(batch), sep_pos + 1] = q
+    counts = (body == q[:, None]).sum(axis=1)
+    answer = np.where(counts > thresh, CONTENT_LO + 1, CONTENT_LO).astype(np.int32)
+    recs[np.arange(batch), sep_pos + 2] = answer
+    mask[:, sep_pos + 1] = True
+    return recs, mask
+
+
+def token_transition(rng, batch, spec: TaskSpec, n_states: int = 4, n_inputs: int = 4, seed: int = 12345):
+    """Automaton with 4 states / 4 inputs. Query an input; return the state
+    the machine was in immediately after its *first* occurrence."""
+    T = spec.seq_len
+    body_len = T // 2
+    recs, mask = _empty(batch, T)
+    trans_rng = np.random.default_rng(seed)
+    transitions = trans_rng.integers(0, n_states, size=(n_states, n_inputs))
+    inputs = rng.integers(0, n_inputs, size=(batch, body_len))
+    state_tokens = np.arange(CONTENT_LO + n_inputs, CONTENT_LO + n_inputs + n_states, dtype=np.int32)
+    for b in range(batch):
+        state = 0
+        first_seen: dict[int, int] = {}
+        for t in range(body_len):
+            inp_idx = int(inputs[b, t])
+            state = int(transitions[state, inp_idx])
+            if inp_idx not in first_seen:
+                first_seen[inp_idx] = state
+        recs[b, 1 : 1 + body_len] = CONTENT_LO + inputs[b]
+        sep_pos = 1 + body_len
+        recs[b, sep_pos] = SEP
+        q_idx = int(rng.choice(list(first_seen.keys())))
+        recs[b, sep_pos + 1] = CONTENT_LO + q_idx
+        recs[b, sep_pos + 2] = state_tokens[first_seen[q_idx]]
+        mask[b, sep_pos + 1] = True
+    return recs, mask
+
+
+def noisy_copy(rng, batch, spec: TaskSpec):
+    """Payload; corrupted copy of payload; [QUERY] original token at corrupt_pos."""
+    T = spec.seq_len
+    k = T // 4
+    recs, mask = _empty(batch, T)
+    payload = sample_content(rng, spec, (batch, k))
+    recs[:, 1 : 1 + k] = payload
+    recs[:, 1 + k] = SEP
+    corrupted = payload.copy()
+    corrupt_pos = rng.integers(0, k, size=batch, dtype=np.int64)
+    repl = sample_content(rng, spec, (batch,))
+    orig = payload[np.arange(batch), corrupt_pos]
+    same = repl == orig
+    while np.any(same):
+        repl = np.where(same, sample_content(rng, spec, (batch,)), repl)
+        same = repl == orig
+    corrupted[np.arange(batch), corrupt_pos] = repl
+    recs[:, 2 + k : 2 + 2 * k] = corrupted
+    query_pos = 2 + 2 * k
+    recs[:, query_pos] = QUERY
+    recs[np.arange(batch), query_pos + 1] = orig
+    mask[:, query_pos] = True
+    return recs, mask
+
+
+def running_max(rng, batch, spec: TaskSpec):
+    """Predict the max-valued token in the body."""
+    T = spec.seq_len
+    body_len = T // 2
+    recs, mask = _empty(batch, T)
+    alpha = min(32, spec.n_content)
+    body = rng.integers(CONTENT_LO, CONTENT_LO + alpha, size=(batch, body_len), dtype=np.int32)
+    recs[:, 1 : 1 + body_len] = body
+    sep_pos = 1 + body_len
+    recs[:, sep_pos] = SEP
+    recs[np.arange(batch), sep_pos + 1] = body.max(axis=1)
+    mask[:, sep_pos] = True
+    return recs, mask
+
+
+def selective_parity(rng, batch, spec: TaskSpec):
+    """MARKER-selected tokens are copied after SEP; *then* the parity of
+    the count of selected tokens is emitted after a second SEP."""
+    T = spec.seq_len
+    src_len = T // 3
+    recs, mask = _empty(batch, T)
+    n_marked_max = src_len // 3
+    for b in range(batch):
+        content = sample_content(rng, spec, (src_len,))
+        if n_marked_max < 1 or src_len < 3:
+            continue
+        n_marked = int(rng.integers(1, max(2, n_marked_max + 1)))
+        positions = np.sort(rng.choice(np.arange(1, src_len), size=n_marked, replace=False))
+        write_pos = 1
+        marked_values: list[int] = []
+        src_idx = 0
+        while src_idx < src_len and write_pos < 1 + src_len:
+            if src_idx in positions:
+                if write_pos + 1 >= T:
+                    break
+                recs[b, write_pos] = MARKER
+                recs[b, write_pos + 1] = content[src_idx]
+                marked_values.append(int(content[src_idx]))
+                write_pos += 2
+            else:
+                recs[b, write_pos] = content[src_idx]
+                write_pos += 1
+            src_idx += 1
+        sep1_pos = write_pos
+        if sep1_pos >= T:
+            continue
+        recs[b, sep1_pos] = SEP
+        target_start = sep1_pos + 1
+        out_len = min(len(marked_values), T - target_start - 2)
+        recs[b, target_start : target_start + out_len] = marked_values[:out_len]
+        sep2_pos = target_start + out_len
+        if sep2_pos + 1 >= T:
+            continue
+        recs[b, sep2_pos] = SEP
+        parity_tok = CONTENT_LO + (len(marked_values) % 2)
+        recs[b, sep2_pos + 1] = parity_tok
+        # loss: copy region (target_start..sep2_pos-1), then the parity at sep2_pos
+        mask[b, target_start - 1 : sep2_pos - 1] = True
+        mask[b, sep2_pos] = True
+    return recs, mask
+
+
+def multi_state_tracking(rng, batch, spec: TaskSpec, n_states: int = 8, n_inputs: int = 4, seed: int = 54321):
+    """8-state FSA run over ~full seq_len, predict final state."""
+    T = spec.seq_len
+    body_len = T - 4
+    recs, mask = _empty(batch, T)
+    trans_rng = np.random.default_rng(seed)
+    transitions = trans_rng.integers(0, n_states, size=(n_states, n_inputs))
+    inputs = rng.integers(0, n_inputs, size=(batch, body_len))
+    state = np.zeros(batch, dtype=np.int64)
+    for t in range(body_len):
+        state = transitions[state, inputs[:, t]]
+    recs[:, 1 : 1 + body_len] = CONTENT_LO + inputs
+    query_pos = 1 + body_len
+    recs[:, query_pos] = QUERY
+    recs[np.arange(batch), query_pos + 1] = CONTENT_LO + n_inputs + state.astype(np.int32)
+    mask[:, query_pos] = True
+    return recs, mask
+
+
+def state_retrieve(rng, batch, spec: TaskSpec, n_states: int = 4, n_inputs: int = 4, seed: int = 12345):
+    """Run FSA over inputs; then ask: which input first drove the machine
+    into state S? Predict that input."""
+    T = spec.seq_len
+    body_len = T // 2
+    recs, mask = _empty(batch, T)
+    trans_rng = np.random.default_rng(seed)
+    transitions = trans_rng.integers(0, n_states, size=(n_states, n_inputs))
+    state_tokens = np.arange(CONTENT_LO + n_inputs, CONTENT_LO + n_inputs + n_states, dtype=np.int32)
+    inputs = rng.integers(0, n_inputs, size=(batch, body_len))
+    for b in range(batch):
+        state = 0
+        first_visit_input: dict[int, int] = {}
+        for t in range(body_len):
+            inp_idx = int(inputs[b, t])
+            next_state = int(transitions[state, inp_idx])
+            if next_state != 0 and next_state not in first_visit_input:
+                first_visit_input[next_state] = inp_idx
+            state = next_state
+        recs[b, 1 : 1 + body_len] = CONTENT_LO + inputs[b]
+        sep_pos = 1 + body_len
+        recs[b, sep_pos] = SEP
+        if not first_visit_input:
+            target_state = 0
+            answer_input = int(inputs[b, 0])
+        else:
+            target_state = int(rng.choice(list(first_visit_input.keys())))
+            answer_input = first_visit_input[target_state]
+        recs[b, sep_pos + 1] = state_tokens[target_state]
+        recs[b, sep_pos + 2] = CONTENT_LO + answer_input
+        mask[b, sep_pos + 1] = True
+    return recs, mask
+
+
+def copy_count(rng, batch, spec: TaskSpec):
+    """Copy a payload after SEP, then count occurrences of a query token in the payload."""
+    T = spec.seq_len
+    k = T // 4
+    recs, mask = _empty(batch, T)
+    payload = sample_content(rng, spec, (batch, k))
+    recs[:, 1 : 1 + k] = payload
+    recs[:, 1 + k] = SEP
+    recs[:, 2 + k : 2 + 2 * k] = payload
+    sep2_pos = 2 + 2 * k
+    if sep2_pos + 2 >= T:
+        # not enough room for count query; return without count labels
+        mask[:, k + 1 : 2 * k + 1] = True
+        return recs, mask
+    recs[:, sep2_pos] = SEP
+    q = sample_content(rng, spec, (batch,))
+    recs[np.arange(batch), sep2_pos + 1] = q
+    counts = (payload == q[:, None]).sum(axis=1)
+    counts = np.minimum(counts, spec.n_content - 1)
+    recs[np.arange(batch), sep2_pos + 2] = (CONTENT_LO + counts).astype(np.int32)
+    # copy-region mask
+    mask[:, k + 1 : 2 * k + 1] = True
+    # count-query mask
+    mask[:, sep2_pos + 1] = True
+    return recs, mask
