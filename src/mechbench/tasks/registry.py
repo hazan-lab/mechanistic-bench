@@ -23,8 +23,8 @@ from . import hop_distance_bucket as T_hop_
 from . import batch_two_hop as T_batc
 from . import dual_hop_retrieve as T_dual
 from . import union_lookup as T_unio
-from . import nested_3_hop as T_nest
-from . import dual_query_hop as T_dual
+from . import nested_3_hop as T_n3hop
+from . import dual_query_hop as T_dqhop
 from . import deep_hop as DH
 from . import k_hop as K
 from . import synthetic as S
@@ -85,8 +85,8 @@ TASK_REGISTRY: dict = {
     "batch_two_hop": T_batc.batch_two_hop,
     "dual_hop_retrieve": T_dual.dual_hop_retrieve,
     "union_lookup": T_unio.union_lookup,
-    "nested_3_hop": T_nest.nested_3_hop,
-    "dual_query_hop": T_dual.dual_query_hop,
+    "nested_3_hop": T_n3hop.nested_3_hop,
+    "dual_query_hop": T_dqhop.dual_query_hop,
     # fixed-depth multi-hop retrieval
     "deep_hop": DH.deep_hop,
     # multi-hop retrieval
