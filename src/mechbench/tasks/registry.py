@@ -37,6 +37,7 @@ from . import temporal_ordering as mod_temporal_ordering
 from . import substring_locate as mod_substring_locate
 from . import assignment_chain as mod_assignment_chain
 from . import video_frame_retrieval as mod_video_frame_retrieval
+from . import video_cell_mode as mod_video_cell_mode
 from . import synthetic as S
 from . import vision as V
 
@@ -111,6 +112,7 @@ TASK_REGISTRY: dict = {
     "substring_locate": mod_substring_locate.substring_locate,
     "assignment_chain": mod_assignment_chain.assignment_chain,
     "video_frame_retrieval": mod_video_frame_retrieval.video_frame_retrieval,
+    "video_cell_mode": mod_video_cell_mode.video_cell_mode,
 }
 
 
