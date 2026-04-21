@@ -96,7 +96,9 @@ class MultiBranchHeadMixer(nn.Module):
             self.attn_dim, self.n_attn_heads, max_seq_len, rope=rope, use_flash=use_flash
         )
         if mamba_cls is None:
-            from .mamba import MinimalMamba as mamba_cls  # local import to avoid cycle
+            # Use MambaBlock so the CUDA kernel is picked up when available;
+            # MinimalMamba is a pure-python reference scan and is ~5-10x slower.
+            from .mamba import MambaBlock as mamba_cls
         self.mamba = mamba_cls(self.mamba_dim)
         self.proj_in = nn.Linear(dim, dim, bias=False)
         self.proj_out = nn.Linear(dim, dim, bias=False)

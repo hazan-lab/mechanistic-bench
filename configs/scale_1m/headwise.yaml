@@ -1,7 +1,10 @@
 # Head-wise attention/mamba hybrid at ~1M params (scale_1m).
 # Each block splits heads between attention and mamba branches
 # (n_attn_heads of the n_heads go to attention, the rest to mamba).
-# Param count: 986,384  (-1.36% of 1,000,000)
+# Param count: 961,800  (-3.82% of 1,000,000)
+# Looser match than other archs: head_dim must be even for RoPE, constraining
+# d_model to multiples of 8. d=120 is the closest feasible; d=128 overshoots
+# to +9%.
 # Param-matched against the other scale_1m/*.yaml configs.
 # Data settings (task/seq_len/vocab/batch/steps) are identical across all.
 
@@ -28,7 +31,7 @@ log_every: 50
 
 # --- model (overrides arch_preset) ---
 model:
-  d_model: 112
+  d_model: 120
   n_heads: 4
   n_attn_heads: 2
   mlp_hidden_mult: 2.0
