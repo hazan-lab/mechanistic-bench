@@ -11,6 +11,7 @@ from functools import partial
 from . import batch_recall as BR
 from . import continuous as C
 from . import two_hop as T_two_
+from . import mode_tagged as T_mode
 from . import synthetic as S
 from . import vision as V
 
@@ -57,6 +58,7 @@ TASK_REGISTRY: dict = {
     # parallel retrieval
     "batch_recall": BR.batch_recall,
     "two_hop": T_two_.two_hop,
+    "mode_tagged": T_mode.mode_tagged,
 }
 
 
