@@ -27,6 +27,7 @@ from . import nested_3_hop as T_n3hop
 from . import dual_query_hop as T_dqhop
 from . import deep_hop as DH
 from . import k_hop as K
+from . import grid_two_coord as mod_grid_two_coord
 from . import synthetic as S
 from . import vision as V
 
@@ -91,6 +92,7 @@ TASK_REGISTRY: dict = {
     "deep_hop": DH.deep_hop,
     # multi-hop retrieval
     "k_hop": K.k_hop,
+    "grid_two_coord": mod_grid_two_coord.grid_two_coord,
 }
 
 
