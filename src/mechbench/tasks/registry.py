@@ -21,6 +21,7 @@ from . import quad_recall as T_quad
 from . import last_tagged as T_last
 from . import hop_distance_bucket as T_hop_
 from . import batch_two_hop as T_batc
+from . import dual_hop_retrieve as T_dual
 from . import synthetic as S
 from . import vision as V
 
@@ -77,6 +78,7 @@ TASK_REGISTRY: dict = {
     "last_tagged": T_last.last_tagged,
     "hop_distance_bucket": T_hop_.hop_distance_bucket,
     "batch_two_hop": T_batc.batch_two_hop,
+    "dual_hop_retrieve": T_dual.dual_hop_retrieve,
 }
 
 
