@@ -30,6 +30,7 @@ from . import k_hop as K
 from . import grid_two_coord as mod_grid_two_coord
 from . import grid_three_coord as mod_grid_three_coord
 from . import grid_multihop as mod_grid_multihop
+from . import variable_lookup as mod_variable_lookup
 from . import synthetic as S
 from . import vision as V
 
@@ -97,6 +98,7 @@ TASK_REGISTRY: dict = {
     "grid_two_coord": mod_grid_two_coord.grid_two_coord,
     "grid_three_coord": mod_grid_three_coord.grid_three_coord,
     "grid_multihop": mod_grid_multihop.grid_multihop,
+    "variable_lookup": mod_variable_lookup.variable_lookup,
 }
 
 
