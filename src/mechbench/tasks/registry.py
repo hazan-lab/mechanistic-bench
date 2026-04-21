@@ -16,6 +16,7 @@ from . import conditional_recall as T_cond
 from . import first_vs_last as T_firs
 from . import triple_recall as T_trip
 from . import nested_lookup as T_nest
+from . import three_hop as T_thre
 from . import synthetic as S
 from . import vision as V
 
@@ -67,6 +68,7 @@ TASK_REGISTRY: dict = {
     "first_vs_last": T_firs.first_vs_last,
     "triple_recall": T_trip.triple_recall,
     "nested_lookup": T_nest.nested_lookup,
+    "three_hop": T_thre.three_hop,
 }
 
 
