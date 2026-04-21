@@ -24,6 +24,7 @@ from . import batch_two_hop as T_batc
 from . import dual_hop_retrieve as T_dual
 from . import union_lookup as T_unio
 from . import nested_3_hop as T_nest
+from . import dual_query_hop as T_dual
 from . import synthetic as S
 from . import vision as V
 
@@ -83,6 +84,7 @@ TASK_REGISTRY: dict = {
     "dual_hop_retrieve": T_dual.dual_hop_retrieve,
     "union_lookup": T_unio.union_lookup,
     "nested_3_hop": T_nest.nested_3_hop,
+    "dual_query_hop": T_dual.dual_query_hop,
 }
 
 
