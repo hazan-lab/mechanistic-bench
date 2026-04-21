@@ -13,6 +13,7 @@ from . import continuous as C
 from . import two_hop as T_two_
 from . import mode_tagged as T_mode
 from . import conditional_recall as T_cond
+from . import first_vs_last as T_firs
 from . import synthetic as S
 from . import vision as V
 
@@ -61,6 +62,7 @@ TASK_REGISTRY: dict = {
     "two_hop": T_two_.two_hop,
     "mode_tagged": T_mode.mode_tagged,
     "conditional_recall": T_cond.conditional_recall,
+    "first_vs_last": T_firs.first_vs_last,
 }
 
 
