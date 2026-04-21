@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from functools import partial
 
+from . import batch_recall as BR
 from . import continuous as C
 from . import synthetic as S
 from . import vision as V
@@ -52,6 +53,8 @@ TASK_REGISTRY: dict = {
     "delayed_echo": C.delayed_echo,
     "piecewise_denoise": C.piecewise_denoise,
     "nearest_key": C.nearest_key,
+    # parallel retrieval
+    "batch_recall": BR.batch_recall,
 }
 
 
