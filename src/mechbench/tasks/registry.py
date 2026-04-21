@@ -32,6 +32,7 @@ from . import grid_three_coord as mod_grid_three_coord
 from . import grid_multihop as mod_grid_multihop
 from . import variable_lookup as mod_variable_lookup
 from . import sort_top2 as mod_sort_top2
+from . import set_intersection_count as mod_set_intersection_count
 from . import synthetic as S
 from . import vision as V
 
@@ -101,6 +102,7 @@ TASK_REGISTRY: dict = {
     "grid_multihop": mod_grid_multihop.grid_multihop,
     "variable_lookup": mod_variable_lookup.variable_lookup,
     "sort_top2": mod_sort_top2.sort_top2,
+    "set_intersection_count": mod_set_intersection_count.set_intersection_count,
 }
 
 
