@@ -16,6 +16,10 @@ from mechbench.models.model import MechConfig, build_model
 
 
 def _blocks(arch: str, n_layers: int) -> List[str]:
+    if arch == "alt_attn_mamba":
+        return [("attn" if i % 2 == 0 else "mamba") for i in range(n_layers)]
+    if arch == "headwise":
+        return ["headwise"] * n_layers
     return [arch] * n_layers
 
 
@@ -73,7 +77,7 @@ def best_d_model(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--archs", nargs="+", default=["attn", "mamba", "stu"])
+    p.add_argument("--archs", nargs="+", default=["attn", "mamba", "lstm", "alt_attn_mamba", "headwise", "stu"])
     p.add_argument("--target", type=int, default=1_000_000)
     p.add_argument("--n_layers", type=int, default=6)
     p.add_argument("--n_heads", type=int, default=4)

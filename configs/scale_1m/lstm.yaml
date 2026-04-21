@@ -1,9 +1,9 @@
-# Mamba at ~1M params (scale_1m).
-# Param count: 1,004,528  (+0.45% of 1,000,000)
-# Param-matched against configs/scale_1m/transformer.yaml and stu.yaml.
-# Data settings (task/seq_len/vocab/batch/steps) are identical across the three.
+# LSTM at ~1M params (scale_1m).
+# Param count: 993,276  (-0.67% of 1,000,000)
+# Param-matched against the other scale_1m/*.yaml configs.
+# Data settings (task/seq_len/vocab/batch/steps) are identical across all.
 
-arch: mamba
+arch: lstm
 scale: 1m
 
 # --- data ---
@@ -26,12 +26,9 @@ log_every: 50
 
 # --- model (overrides arch_preset) ---
 model:
-  d_model: 112
+  d_model: 108
   n_heads: 4
   mlp_hidden_mult: 2.0
-  block_types: [mamba, mamba, mamba, mamba, mamba, mamba]
-  d_state: 16
-  d_conv: 4
-  mamba_expand: 2
+  block_types: [lstm, lstm, lstm, lstm, lstm, lstm]
   tie_embeddings: true
   dropout: 0.0

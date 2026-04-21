@@ -25,6 +25,20 @@ def parse_args():
     return p.parse_args()
 
 
+def _config_for(scale: str, arch: str) -> Path | None:
+    """Resolve the param-matched yaml for (scale, arch), if one exists."""
+    # transformer.yaml historically uses a friendlier filename for arch=attn.
+    candidates = [f"{arch}.yaml"]
+    if arch == "attn":
+        candidates.append("transformer.yaml")
+    repo_root = Path(__file__).resolve().parent.parent
+    for name in candidates:
+        p = repo_root / "configs" / f"scale_{scale}" / name
+        if p.exists():
+            return p
+    return None
+
+
 def main():
     args = parse_args()
     tasks = args.tasks or list_tasks()
@@ -32,14 +46,25 @@ def main():
     cmds = []
     for task in tasks:
         for arch in archs:
-            cmd = [
-                sys.executable, "scripts/train.py",
-                "--task", task, "--arch", arch, "--scale", args.scale,
-                "--max_steps", str(args.max_steps),
-                "--seq_len", str(args.seq_len),
-                "--batch_size", str(args.batch_size),
-                "--out_dir", args.out_dir,
-            ]
+            cfg_path = _config_for(args.scale, arch)
+            if cfg_path is not None:
+                # yaml supplies model hyperparams + steps/seq_len/batch; --task wins over yaml.
+                cmd = [
+                    sys.executable, "scripts/train.py",
+                    "--config", str(cfg_path),
+                    "--task", task,
+                    "--out_dir", args.out_dir,
+                ]
+            else:
+                # fall back to preset-based training
+                cmd = [
+                    sys.executable, "scripts/train.py",
+                    "--task", task, "--arch", arch, "--scale", args.scale,
+                    "--max_steps", str(args.max_steps),
+                    "--seq_len", str(args.seq_len),
+                    "--batch_size", str(args.batch_size),
+                    "--out_dir", args.out_dir,
+                ]
             cmds.append(cmd)
 
     print(f"dispatching {len(cmds)} runs (scale={args.scale})")
@@ -49,7 +74,7 @@ def main():
         return
 
     for i, cmd in enumerate(cmds, 1):
-        print(f"[{i}/{len(cmds)}] {' '.join(cmd)}")
+        print(f"[{i}/{len(cmds)}] {' '.join(cmd)}", flush=True)
         subprocess.run(cmd, check=False)
 
 

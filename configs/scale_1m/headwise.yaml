@@ -1,0 +1,42 @@
+# Head-wise attention/mamba hybrid at ~1M params (scale_1m).
+# Each block splits heads between attention and mamba branches
+# (n_attn_heads of the n_heads go to attention, the rest to mamba).
+# Param count: 986,384  (-1.36% of 1,000,000)
+# Param-matched against the other scale_1m/*.yaml configs.
+# Data settings (task/seq_len/vocab/batch/steps) are identical across all.
+
+arch: headwise
+scale: 1m
+
+# --- data ---
+task: induction
+seq_len: 256
+vocab_size: 64
+batch_size: 128
+eval_batch_size: 256
+
+# --- training ---
+max_steps: 4000
+warmup_steps: 200
+eval_every: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+# --- model (overrides arch_preset) ---
+model:
+  d_model: 112
+  n_heads: 4
+  n_attn_heads: 2
+  mlp_hidden_mult: 2.0
+  block_types: [headwise, headwise, headwise, headwise, headwise, headwise]
+  rope: true
+  use_flash: true
+  d_state: 16
+  d_conv: 4
+  mamba_expand: 2
+  tie_embeddings: true
+  dropout: 0.0

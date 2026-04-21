@@ -31,7 +31,7 @@ def scale_dmodel(scale: str) -> int:
 
 
 def _blocks(pattern: str, n_layers: int) -> List[str]:
-    if pattern in {"attn", "mamba", "rnn", "lstm", "mlp", "stu"}:
+    if pattern in {"attn", "mamba", "lstm", "stu"}:
         return [pattern] * n_layers
     if pattern == "alt_attn_mamba":
         return [("attn" if i % 2 == 0 else "mamba") for i in range(n_layers)]
@@ -46,9 +46,7 @@ D_MODEL_OFFSETS = {
     "1m": {
         "attn": 0,
         "mamba": -28,
-        "rnn": 32,
         "lstm": 0,
-        "mlp": 32,
         "alt_attn_mamba": -16,
         "headwise": -16,
         "stu": 0,
@@ -56,9 +54,7 @@ D_MODEL_OFFSETS = {
     "10m": {
         "attn": 0,
         "mamba": -64,
-        "rnn": 64,
         "lstm": 0,
-        "mlp": 64,
         "alt_attn_mamba": -32,
         "headwise": -32,
         "stu": 0,
@@ -66,9 +62,7 @@ D_MODEL_OFFSETS = {
     "150m": {
         "attn": 0,
         "mamba": -96,
-        "rnn": 128,
         "lstm": 0,
-        "mlp": 128,
         "alt_attn_mamba": -64,
         "headwise": -48,
         "stu": 0,
