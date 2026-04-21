@@ -36,6 +36,7 @@ from . import set_intersection_count as mod_set_intersection_count
 from . import temporal_ordering as mod_temporal_ordering
 from . import substring_locate as mod_substring_locate
 from . import assignment_chain as mod_assignment_chain
+from . import video_frame_retrieval as mod_video_frame_retrieval
 from . import synthetic as S
 from . import vision as V
 
@@ -109,6 +110,7 @@ TASK_REGISTRY: dict = {
     "temporal_ordering": mod_temporal_ordering.temporal_ordering,
     "substring_locate": mod_substring_locate.substring_locate,
     "assignment_chain": mod_assignment_chain.assignment_chain,
+    "video_frame_retrieval": mod_video_frame_retrieval.video_frame_retrieval,
 }
 
 
