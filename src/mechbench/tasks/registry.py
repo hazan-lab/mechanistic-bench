@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from functools import partial
 
+from . import continuous as C
 from . import synthetic as S
+from . import vision as V
 
 TASK_REGISTRY: dict = {
     # retrieval
@@ -42,6 +44,14 @@ TASK_REGISTRY: dict = {
     "multi_state_tracking": S.multi_state_tracking,
     "state_retrieve": S.state_retrieve,
     "copy_count": S.copy_count,
+    # vision (raster-flattened 2D)
+    "grid_retrieval": V.grid_retrieval,
+    "col_parity": V.col_parity,
+    "patch_match": V.patch_match,
+    # continuous (tokenised real-valued signals)
+    "delayed_echo": C.delayed_echo,
+    "piecewise_denoise": C.piecewise_denoise,
+    "nearest_key": C.nearest_key,
 }
 
 
