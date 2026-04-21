@@ -18,6 +18,7 @@ from . import triple_recall as T_trip
 from . import nested_lookup as T_nest
 from . import three_hop as T_thre
 from . import quad_recall as T_quad
+from . import last_tagged as T_last
 from . import synthetic as S
 from . import vision as V
 
@@ -71,6 +72,7 @@ TASK_REGISTRY: dict = {
     "nested_lookup": T_nest.nested_lookup,
     "three_hop": T_thre.three_hop,
     "quad_recall": T_quad.quad_recall,
+    "last_tagged": T_last.last_tagged,
 }
 
 
