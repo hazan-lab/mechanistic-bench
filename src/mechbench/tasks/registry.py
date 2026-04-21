@@ -34,6 +34,7 @@ from . import variable_lookup as mod_variable_lookup
 from . import sort_top2 as mod_sort_top2
 from . import set_intersection_count as mod_set_intersection_count
 from . import temporal_ordering as mod_temporal_ordering
+from . import substring_locate as mod_substring_locate
 from . import synthetic as S
 from . import vision as V
 
@@ -105,6 +106,7 @@ TASK_REGISTRY: dict = {
     "sort_top2": mod_sort_top2.sort_top2,
     "set_intersection_count": mod_set_intersection_count.set_intersection_count,
     "temporal_ordering": mod_temporal_ordering.temporal_ordering,
+    "substring_locate": mod_substring_locate.substring_locate,
 }
 
 
