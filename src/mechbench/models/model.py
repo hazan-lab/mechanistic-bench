@@ -25,7 +25,7 @@ import torch.nn.functional as F
 
 from .attention import CausalSelfAttention, MultiBranchHeadMixer
 from .common import RMSNorm, SwiGLU
-from .mamba import MambaBlock
+from .mamba import Mamba2Block, MambaBlock
 from .recurrent import ElmanRNN, LSTMMixer, MLPMixer
 from .stu import STUBlock
 
@@ -42,6 +42,9 @@ class MechConfig:
     d_state: int = 16
     d_conv: int = 4
     mamba_expand: int = 2
+    # mamba-2 hyperparams (Mamba2 block only)
+    mamba2_headdim: int = 64
+    mamba2_chunk_size: int = 256
     # attention opts
     rope: bool = True
     use_flash: bool = True
@@ -62,6 +65,15 @@ def _build_mixer(block_type: str, cfg: MechConfig) -> nn.Module:
         )
     if block_type == "mamba":
         return MambaBlock(cfg.d_model, d_state=cfg.d_state, d_conv=cfg.d_conv, expand=cfg.mamba_expand)
+    if block_type == "mamba2":
+        return Mamba2Block(
+            cfg.d_model,
+            d_state=cfg.d_state,
+            d_conv=cfg.d_conv,
+            expand=cfg.mamba_expand,
+            headdim=cfg.mamba2_headdim,
+            chunk_size=cfg.mamba2_chunk_size,
+        )
     if block_type == "rnn":
         return ElmanRNN(cfg.d_model)
     if block_type == "lstm":
@@ -83,6 +95,9 @@ def _build_mixer(block_type: str, cfg: MechConfig) -> nn.Module:
             cfg.max_seq_len,
             rope=cfg.rope,
             use_flash=cfg.use_flash,
+            d_state=cfg.d_state,
+            d_conv=cfg.d_conv,
+            mamba_expand=cfg.mamba_expand,
         )
     raise ValueError(f"Unknown block_type '{block_type}'")
 
