@@ -87,7 +87,8 @@ def evaluate(model: MechModel, task_fn, rng, cfg: TrainConfig, spec: TaskSpec, d
     tok_acc = correct_tok / max(1, total_tok)
     seq_acc = correct_seq / max(1, total_seq)
     eval_loss = loss_sum / max(1, loss_tok)
-    return {"tok_acc": tok_acc, "seq_acc": seq_acc, "eval_loss": eval_loss}
+    eval_ppl = math.exp(min(eval_loss, 50.0))
+    return {"tok_acc": tok_acc, "seq_acc": seq_acc, "eval_loss": eval_loss, "eval_ppl": eval_ppl}
 
 
 def train_loop(cfg: TrainConfig, model_cfg: MechConfig):
@@ -132,10 +133,12 @@ def train_loop(cfg: TrainConfig, model_cfg: MechConfig):
             print(f"wandb unavailable: {e}")
 
     history: list[dict] = []
+    train_log: list[dict] = []
     step = 0
     t0 = time.time()
-    log_loss = 0.0
-    log_tok = 0
+    # Accumulate on GPU; only sync at log_every to avoid per-step pipeline stalls.
+    loss_sum_gpu = torch.zeros((), device=device, dtype=torch.float32)
+    tok_sum_gpu = torch.zeros((), device=device, dtype=torch.float32)
     while step < cfg.max_steps:
         batch = _make_batch(task_fn, train_rng, cfg, spec, device)
         with torch.autocast(device_type="cuda", dtype=_dtype(cfg.dtype), enabled=(cfg.dtype != "fp32")):
@@ -151,25 +154,35 @@ def train_loop(cfg: TrainConfig, model_cfg: MechConfig):
         optim.step()
         scheduler.step()
 
-        log_loss += loss.item() * batch.loss_mask.sum().item()
-        log_tok += batch.loss_mask.sum().item()
+        # GPU-side accumulation — no sync on hot path.
+        tok_count = batch.loss_mask.sum().to(torch.float32)
+        loss_sum_gpu += loss.detach().to(torch.float32) * tok_count
+        tok_sum_gpu += tok_count
         step += 1
 
         if step % cfg.log_every == 0:
-            mean_loss = log_loss / max(1, log_tok)
+            # Single sync for the log interval.
+            ls = loss_sum_gpu.item()
+            ts = tok_sum_gpu.item()
+            mean_loss = ls / max(1.0, ts)
+            mean_ppl = math.exp(min(mean_loss, 50.0))
             tps = cfg.batch_size * cfg.seq_len * cfg.log_every / max(1e-9, time.time() - t0)
-            print(f"step {step}/{cfg.max_steps}  loss {mean_loss:.4f}  lr {scheduler.get_last_lr()[0]:.2e}  tok/s {tps:.0f}")
+            cur_lr = scheduler.get_last_lr()[0]
+            print(f"step {step}/{cfg.max_steps}  loss {mean_loss:.4f}  ppl {mean_ppl:.2f}  lr {cur_lr:.2e}  tok/s {tps:.0f}")
+            train_log.append({"step": step, "train_loss": mean_loss, "train_ppl": mean_ppl, "lr": cur_lr, "tok_per_s": tps})
+            (out_dir / "train_log.json").write_text(json.dumps({"train_log": train_log, "n_params": n_params}, indent=2))
             if use_wandb:
                 import wandb
-                wandb.log({"train/loss": mean_loss, "train/lr": scheduler.get_last_lr()[0], "step": step})
-            log_loss = 0.0
-            log_tok = 0
+                wandb.log({"train/loss": mean_loss, "train/ppl": mean_ppl, "train/lr": cur_lr, "step": step})
+            loss_sum_gpu.zero_()
+            tok_sum_gpu.zero_()
             t0 = time.time()
 
         if step % cfg.eval_every == 0 or step == cfg.max_steps:
             metrics = evaluate(model, task_fn, eval_rng, cfg, spec, device)
-            print(f"  eval step {step}: tok_acc {metrics['tok_acc']:.3f}  seq_acc {metrics['seq_acc']:.3f}  loss {metrics['eval_loss']:.4f}")
+            print(f"  eval step {step}: tok_acc {metrics['tok_acc']:.3f}  seq_acc {metrics['seq_acc']:.3f}  loss {metrics['eval_loss']:.4f}  ppl {metrics['eval_ppl']:.2f}")
             history.append({"step": step, **metrics})
+            (out_dir / "history.json").write_text(json.dumps({"history": history, "n_params": n_params}, indent=2))
             if use_wandb:
                 import wandb
                 wandb.log({f"eval/{k}": v for k, v in metrics.items()} | {"step": step})
@@ -178,8 +191,9 @@ def train_loop(cfg: TrainConfig, model_cfg: MechConfig):
     ckpt_path = out_dir / "model.pt"
     torch.save({"model": (model.state_dict() if not cfg.compile else model._orig_mod.state_dict()),
                 "cfg": asdict(cfg), "model_cfg": asdict(model_cfg),
-                "history": history, "n_params": n_params}, ckpt_path)
+                "history": history, "train_log": train_log, "n_params": n_params}, ckpt_path)
     (out_dir / "history.json").write_text(json.dumps({"history": history, "n_params": n_params}, indent=2))
+    (out_dir / "train_log.json").write_text(json.dumps({"train_log": train_log, "n_params": n_params}, indent=2))
     print(f"[{run_name}] saved -> {ckpt_path}")
     if use_wandb:
         import wandb

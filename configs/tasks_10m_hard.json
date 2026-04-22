@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "description": "Per-task hard-mode hyperparameters tuned so a 10M-param transformer does NOT saturate (trained tok_acc stays < ~85% at 4000 steps, 10m attn preset). Each entry gives seq_len, vocab_size, and task_params passed via functools.partial; optional lr and warmup_steps override the defaults (3e-4 / 200).",
+    "base_1m_config": {"seq_len": 256, "vocab_size": 64, "batch_size": 128, "max_steps": 4000, "lr": 3.0e-4, "warmup_steps": 200},
+    "sweep_defaults": {"batch_size": 64, "max_steps": 4000, "lr": 3.0e-4, "warmup_steps": 200, "dtype": "bf16"},
+    "notes": "Three coord-to-cell tasks (grid_two_coord, grid_three_coord, video_frame_retrieval) need lr=1e-4 + warmup=500 at 10m to converge; lr=3e-4 stalls them at modal."
+  },
+
+  "k_hop":                  {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 20, "max_hops": 6}},
+  "deep_hop":               {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 20, "k": 7}},
+  "batch_recall":           {"seq_len": 512, "vocab_size": 96, "task_params": {"n_pairs": 28, "n_queries": 10}},
+  "two_hop":                {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 28}},
+  "three_hop":              {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 24}},
+  "triple_recall":          {"seq_len": 512, "vocab_size": 96, "task_params": {"n_pairs": 28, "n_queries": 6}},
+  "quad_recall":            {"seq_len": 512, "vocab_size": 96, "task_params": {"n_pairs": 28, "n_queries": 8}},
+  "conditional_recall":     {"seq_len": 512, "vocab_size": 96, "task_params": {"n_pairs": 24}},
+  "nested_lookup":          {"seq_len": 512, "vocab_size": 96, "task_params": {"n_pairs": 16}},
+  "nested_3_hop":           {"seq_len": 512, "vocab_size": 96, "task_params": {"n_pairs": 12}},
+  "mode_tagged":            {"seq_len": 768, "vocab_size": 64, "task_params": {"body_alpha": 10, "n_tags": 8, "body_pairs": 160}},
+  "first_vs_last":          {"seq_len": 512, "vocab_size": 64, "task_params": {"body_len": 256, "alpha": 10, "n_buckets": 16}},
+  "hop_distance_bucket":    {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 20, "max_dist": 10}},
+  "last_tagged":            {"seq_len": 512, "vocab_size": 64, "task_params": {"body_pairs": 96, "n_tags": 6}},
+  "union_lookup":           {"seq_len": 512, "vocab_size": 96, "task_params": {"n_pairs": 16}},
+  "dual_query_hop":         {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 24}},
+  "dual_hop_retrieve":      {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 28}},
+  "batch_two_hop":          {"seq_len": 512, "vocab_size": 64, "task_params": {"n_nodes": 20, "n_queries": 6}},
+
+  "variable_lookup":        {"seq_len": 512, "vocab_size": 96, "task_params": {"n_vars": 20, "n_queries": 6}},
+  "sort_top2":              {"seq_len": 512, "vocab_size": 96, "task_params": {"body_len": 128, "alpha": 40}},
+  "set_intersection_count": {"seq_len": 512, "vocab_size": 96, "task_params": {"set_size": 28, "alpha": 48, "max_count": 16}},
+  "temporal_ordering":      {"seq_len": 384, "vocab_size": 64, "task_params": {"body_len": 192, "alpha": 16}},
+  "substring_locate":       {"seq_len": 256, "vocab_size": 64, "task_params": {"body_len": 128, "alpha": 10, "n_buckets": 12}},
+  "assignment_chain":       {"seq_len": 512, "vocab_size": 96, "task_params": {"n_vars": 14}},
+
+  "grid_two_coord":         {"seq_len": 256, "vocab_size": 64, "task_params": {}, "lr": 1.0e-4, "warmup_steps": 500},
+  "grid_three_coord":       {"seq_len": 256, "vocab_size": 64, "task_params": {}, "lr": 1.0e-4, "warmup_steps": 500},
+  "grid_multihop":          {"seq_len": 512, "vocab_size": 64, "task_params": {}},
+
+  "video_frame_retrieval":  {"seq_len": 256, "vocab_size": 64, "task_params": {"side": 4, "n_frames": 4}, "lr": 1.0e-4, "warmup_steps": 500},
+  "video_cell_mode":        {"seq_len": 640, "vocab_size": 64, "task_params": {"side": 6, "n_frames": 11}}
+}

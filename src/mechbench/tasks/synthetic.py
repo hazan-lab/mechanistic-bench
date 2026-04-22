@@ -158,6 +158,8 @@ def associative(rng, batch, spec: TaskSpec):
         n_pairs = max(2, (T - 4) // 2 // 2)
     # split vocabulary: keys come from first half, values from second half
     half = spec.n_content // 2
+    # keys must be unique per sample — clamp pair count to the key alphabet size.
+    n_pairs = min(n_pairs, half)
     key_lo, key_hi = CONTENT_LO, CONTENT_LO + half
     val_lo, val_hi = CONTENT_LO + half, spec.vocab_size
     # sample unique keys per sample
