@@ -1,5 +1,6 @@
 # Mamba at ~1M params (scale_1m).
 # Param count: 1,004,528  (+0.45% of 1,000,000)
+# d_state=16 matches the original Mamba paper's default across all scales.
 # Param-matched against configs/scale_1m/transformer.yaml and stu.yaml.
 # Data settings (task/seq_len/vocab/batch/steps) are identical across the three.
 

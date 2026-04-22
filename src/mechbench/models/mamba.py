@@ -20,6 +20,14 @@ except Exception:  # pragma: no cover
     _MambaSSM = None
     HAS_MAMBA_SSM = False
 
+try:
+    from mamba_ssm.modules.mamba2 import Mamba2 as _Mamba2SSM  # type: ignore
+
+    HAS_MAMBA2_SSM = True
+except Exception:  # pragma: no cover
+    _Mamba2SSM = None
+    HAS_MAMBA2_SSM = False
+
 
 class MinimalMamba(nn.Module):
     """A pure-PyTorch selective SSM with a reference (slow) sequential scan.
@@ -91,6 +99,49 @@ class MambaBlock(nn.Module):
             self.inner = _MambaSSM(d_model=d_model, d_state=d_state, d_conv=d_conv, expand=expand)
         else:
             self.inner = MinimalMamba(d_model=d_model, d_state=d_state, d_conv=d_conv, expand=expand)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.inner(x)
+
+
+class Mamba2Block(nn.Module):
+    """Mamba-2 (SSD) mixer. Requires mamba_ssm >= 2.0 — no fallback.
+
+    Note: Mamba-2 requires d_inner (= expand * d_model) to be divisible by
+    headdim, and chunk_size should not exceed the sequence length. The
+    shipped scale_1m/mamba2.yaml uses d_model=96, d_state=256, headdim=64,
+    expand=2, chunk_size=256 to hit ~1M params.
+    """
+
+    def __init__(
+        self,
+        d_model: int,
+        d_state: int = 128,
+        d_conv: int = 4,
+        expand: int = 2,
+        headdim: int = 64,
+        chunk_size: int = 256,
+    ):
+        super().__init__()
+        if not HAS_MAMBA2_SSM:
+            raise ImportError(
+                "Mamba2Block requires mamba_ssm>=2.0 with the Mamba2 module; "
+                "install with `uv pip install mamba-ssm`."
+            )
+        d_inner = expand * d_model
+        if d_inner % headdim != 0:
+            raise ValueError(
+                f"d_inner={d_inner} (expand*d_model={expand}*{d_model}) must be "
+                f"divisible by headdim={headdim}"
+            )
+        self.inner = _Mamba2SSM(
+            d_model=d_model,
+            d_state=d_state,
+            d_conv=d_conv,
+            expand=expand,
+            headdim=headdim,
+            chunk_size=chunk_size,
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.inner(x)
