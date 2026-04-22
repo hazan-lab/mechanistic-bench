@@ -15,6 +15,11 @@ dependencies = [
     "wandb>=0.19",
     "tqdm>=4.66",
     "pandas>=2.2",
+    "torchmetrics>=1.9.0",
+    "scikit-learn>=1.7.2",
+    "datasets>=4.8.4",
+    "cached-path>=1.8.10",
+    "tokenizers>=0.22.2",
 ]
 
 [project.optional-dependencies]
@@ -51,3 +56,8 @@ causal-conv1d = { url = "https://github.com/Dao-AILab/causal-conv1d/releases/dow
 [tool.ruff]
 line-length = 110
 target-version = "py310"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
