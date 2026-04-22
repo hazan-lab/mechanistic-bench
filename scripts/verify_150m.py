@@ -14,7 +14,6 @@ CONFIGS = [
     "configs/lm/150m/attn.yaml",
     "configs/lm/150m/mamba.yaml",
     "configs/lm/150m/alt_attn_mamba.yaml",
-    "configs/lm/150m/headwise_alt_attn_mamba.yaml",
 ]
 
 TARGET = 150_000_000

@@ -37,16 +37,6 @@ def _blocks(pattern: str, n_layers: int) -> List[str]:
         return [("attn" if i % 2 == 0 else "mamba") for i in range(n_layers)]
     if pattern == "headwise":
         return ["headwise"] * n_layers
-    if pattern == "headwise_alt_attn_mamba":
-        # Even layers: headwise (head-level attn+mamba split).
-        # Odd layers: alternate pure attn and pure mamba.
-        out = []
-        for i in range(n_layers):
-            if i % 2 == 0:
-                out.append("headwise")
-            else:
-                out.append("attn" if (i // 2) % 2 == 0 else "mamba")
-        return out
     raise ValueError(f"Unknown arch pattern {pattern}")
 
 

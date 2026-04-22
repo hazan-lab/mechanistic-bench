@@ -23,7 +23,7 @@ N_HEADS = 12
 MLP_HIDDEN_MULT = 4.0  # standard transformer
 VOCAB = 50304
 SEQ_LEN = 2048
-ARCHS = ("attn", "mamba", "alt_attn_mamba", "headwise_alt_attn_mamba")
+ARCHS = ("attn", "mamba", "alt_attn_mamba")
 # Finer step: multiple of n_heads*2 so head_dim stays even.
 D_STEP = N_HEADS * 4  # 48  -> head_dim in {16, 20, 24, ...}
 
