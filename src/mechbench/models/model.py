@@ -50,6 +50,7 @@ class MechConfig:
     use_flash: bool = True
     # headwise hybrid
     n_attn_heads: int = 2   # used only when block_type == "headwise"
+    headwise_mamba_variant: str = "mamba"  # "mamba" or "mamba2"
     # stu
     num_eigh: int = 24
     use_hankel_L: bool = False
@@ -98,6 +99,9 @@ def _build_mixer(block_type: str, cfg: MechConfig) -> nn.Module:
             d_state=cfg.d_state,
             d_conv=cfg.d_conv,
             mamba_expand=cfg.mamba_expand,
+            mamba_variant=cfg.headwise_mamba_variant,
+            mamba2_headdim=cfg.mamba2_headdim,
+            mamba2_chunk_size=cfg.mamba2_chunk_size,
         )
     raise ValueError(f"Unknown block_type '{block_type}'")
 

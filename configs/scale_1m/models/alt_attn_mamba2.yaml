@@ -1,0 +1,39 @@
+# Layer-wise attention/Mamba-2 hybrid at ~1M params.
+# Alternating attn/mamba2 blocks: [attn, mamba2, attn, mamba2, attn, mamba2].
+# Param count: 1,199,524  (+19.95% of 1,000,000)
+#
+# Mamba-2's d_inner=expand*d_model must be divisible by headdim (64), so with
+# expand=2 the smallest d_model satisfying this and the 4-head RoPE constraint
+# is 128 (d_inner=256, 4 mamba2 heads). d_state=128 balances Mamba-2's cheap-
+# large-state spirit against the ~1M param budget; d_state=256 overshoots
+# (+30%) and d_state=16 understates Mamba-2 (matches mamba.yaml).
+
+arch: alt_attn_mamba2
+scale: 1m
+
+batch_size: 128
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 128
+  n_heads: 4
+  mlp_hidden_mult: 2.0
+  block_types: [attn, mamba2, attn, mamba2, attn, mamba2]
+  rope: true
+  use_flash: true
+  d_state: 128
+  d_conv: 4
+  mamba_expand: 2
+  mamba2_headdim: 64
+  mamba2_chunk_size: 256
+  tie_embeddings: true
+  dropout: 0.0

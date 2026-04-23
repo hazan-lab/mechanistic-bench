@@ -1,0 +1,38 @@
+# Layer-wise attention/Mamba-2 hybrid at ~10M params.
+# Alternating attn/mamba2 blocks (8 layers total).
+# Param count: 9,731,000  (-2.69% of 10,000,000)
+#
+# d_model=320 satisfies Mamba-2's d_inner%headdim==0 (2*320=640=10*64) and
+# keeps 8 attention heads with head_dim=40 (RoPE requires even head_dim).
+# d_state=256 matches the scale_10m/mamba2.yaml choice — Mamba-2 SSD makes
+# large d_state cheap.
+
+arch: alt_attn_mamba2
+scale: 10m
+
+batch_size: 64
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 320
+  n_heads: 8
+  mlp_hidden_mult: 2.0
+  block_types: [attn, mamba2, attn, mamba2, attn, mamba2, attn, mamba2]
+  rope: true
+  use_flash: true
+  d_state: 256
+  d_conv: 4
+  mamba_expand: 2
+  mamba2_headdim: 64
+  mamba2_chunk_size: 256
+  tie_embeddings: true
+  dropout: 0.0

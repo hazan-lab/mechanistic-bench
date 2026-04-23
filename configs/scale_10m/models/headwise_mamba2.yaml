@@ -1,0 +1,40 @@
+# Head-wise attention/Mamba-2 hybrid at ~10M params.
+# Each block splits heads between attention (4 heads) and Mamba-2 (4 heads).
+# Param count: 8,987,320  (-10.13% of 10,000,000)
+#
+# Divisibility: with n_heads=8, n_attn_heads=4, mamba_branch_dim = d_model/2;
+# Mamba-2 requires (d_model/2)*expand % 64 == 0 → d_model % 64 == 0. d=320
+# lands 10% low, d=384 overshoots +28%; 320 is closer. d_state=128 balances
+# the param budget against Mamba-2's cheap-large-state design.
+
+arch: headwise_mamba2
+scale: 10m
+
+batch_size: 64
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 320
+  n_heads: 8
+  n_attn_heads: 4
+  mlp_hidden_mult: 2.0
+  block_types: [headwise, headwise, headwise, headwise, headwise, headwise, headwise, headwise]
+  rope: true
+  use_flash: true
+  d_state: 128
+  d_conv: 4
+  mamba_expand: 2
+  mamba2_headdim: 64
+  mamba2_chunk_size: 256
+  headwise_mamba_variant: mamba2
+  tie_embeddings: true
+  dropout: 0.0

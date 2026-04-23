@@ -85,6 +85,9 @@ class MultiBranchHeadMixer(nn.Module):
         d_state: int = 16,
         d_conv: int = 4,
         mamba_expand: int = 2,
+        mamba_variant: str = "mamba",
+        mamba2_headdim: int = 64,
+        mamba2_chunk_size: int = 256,
     ):
         super().__init__()
         assert 0 < n_attn_heads < n_heads, "n_attn_heads must be between 1 and n_heads-1"
@@ -98,13 +101,25 @@ class MultiBranchHeadMixer(nn.Module):
         self.attn = CausalSelfAttention(
             self.attn_dim, self.n_attn_heads, max_seq_len, rope=rope, use_flash=use_flash
         )
-        if mamba_cls is None:
-            # Use MambaBlock so the CUDA kernel is picked up when available;
-            # MinimalMamba is a pure-python reference scan and is ~5-10x slower.
-            from .mamba import MambaBlock as mamba_cls
-        self.mamba = mamba_cls(
-            self.mamba_dim, d_state=d_state, d_conv=d_conv, expand=mamba_expand
-        )
+        if mamba_cls is not None:
+            self.mamba = mamba_cls(
+                self.mamba_dim, d_state=d_state, d_conv=d_conv, expand=mamba_expand
+            )
+        elif mamba_variant == "mamba2":
+            from .mamba import Mamba2Block
+            self.mamba = Mamba2Block(
+                self.mamba_dim,
+                d_state=d_state,
+                d_conv=d_conv,
+                expand=mamba_expand,
+                headdim=mamba2_headdim,
+                chunk_size=mamba2_chunk_size,
+            )
+        else:
+            from .mamba import MambaBlock
+            self.mamba = MambaBlock(
+                self.mamba_dim, d_state=d_state, d_conv=d_conv, expand=mamba_expand
+            )
         self.proj_in = nn.Linear(dim, dim, bias=False)
         self.proj_out = nn.Linear(dim, dim, bias=False)
 
