@@ -1,22 +1,16 @@
-# Vanilla causal transformer at ~1M params (scale_1m).
+# Vanilla causal transformer at ~1M params.
 # Param count: 992,896  (-0.71% of 1,000,000)
-# Param-matched against configs/scale_1m/mamba.yaml and stu.yaml.
-# Data settings (task/seq_len/vocab/batch/steps) are identical across the three.
+# Param-matched against configs/scale_1m/models/{mamba,stu,lstm,mamba2,headwise,alt_attn_mamba}.yaml.
 
 arch: attn
 scale: 1m
 
-# --- data ---
-task: induction
-seq_len: 256
-vocab_size: 64
+# Training defaults (tasks.yaml may override per task).
 batch_size: 128
 eval_batch_size: 256
-
-# --- training ---
+eval_every: 200
 max_steps: 4000
 warmup_steps: 200
-eval_every: 200
 lr: 3.0e-4
 weight_decay: 0.1
 grad_clip: 1.0
@@ -24,7 +18,7 @@ dtype: bf16
 seed: 42
 log_every: 50
 
-# --- model (overrides arch_preset) ---
+# Model hyperparams. max_seq_len and vocab_size are set from the task entry.
 model:
   d_model: 128
   n_heads: 4

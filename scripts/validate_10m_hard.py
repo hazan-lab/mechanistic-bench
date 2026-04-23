@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from functools import partial
 from pathlib import Path
 
 import numpy as np
+import yaml
 
 from mechbench.tasks.base import TaskSpec
-from mechbench.tasks.registry import TASK_REGISTRY, get_task
+from mechbench.tasks.registry import TASK_REGISTRY
 
 
 def modal_baseline(records, mask):
@@ -22,17 +22,19 @@ def modal_baseline(records, mask):
 
 
 def main(cfg_path: str):
-    cfg = json.loads(Path(cfg_path).read_text())
+    doc = yaml.safe_load(Path(cfg_path).read_text()) or {}
+    defaults = doc.get("defaults", {}) or {}
+    tasks = doc.get("tasks", {}) or {}
     rng = np.random.default_rng(0)
     bad = []
-    for task, spec_cfg in cfg.items():
-        if task.startswith("_"):
-            continue
+    for task, entry in tasks.items():
+        entry = entry or {}
+        T = entry.get("seq_len", defaults.get("seq_len"))
+        V = entry.get("vocab_size", defaults.get("vocab_size"))
+        params = dict(defaults.get("task_params") or {})
+        params.update(entry.get("task_params") or {})
         base = TASK_REGISTRY[task]
-        params = spec_cfg.get("task_params", {})
         fn = partial(base, **params) if params else base
-        T = spec_cfg["seq_len"]
-        V = spec_cfg["vocab_size"]
         spec = TaskSpec(name=task, seq_len=T, vocab_size=V)
         try:
             recs, mask = fn(rng, 256, spec)
@@ -50,5 +52,5 @@ def main(cfg_path: str):
 
 
 if __name__ == "__main__":
-    cfg_path = sys.argv[1] if len(sys.argv) > 1 else "configs/tasks_10m_hard.json"
+    cfg_path = sys.argv[1] if len(sys.argv) > 1 else "configs/scale_10m/tasks.yaml"
     main(cfg_path)

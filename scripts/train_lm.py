@@ -2,7 +2,7 @@
 
 Usage::
 
-    uv run python scripts/train_lm.py configs/lm/mechbench-10m.yaml \
+    uv run python scripts/train_lm.py configs/lm/scale_10m/mechbench.yaml \
         [key.subkey=value] [other.key=value] ...
 
 Any trailing ``key=value`` arguments are applied as OmegaConf dotlist

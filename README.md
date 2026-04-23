@@ -18,7 +18,7 @@ The suite is built around four requirements for each task:
 
 - `scale_1m`   — ~1M params, sanity check & rapid sweeps.
 - `scale_10m`  — ~10M params, headline mechanistic-suite numbers.
-- `lm_150m`    — ~150M language models for the suite↔LM correlation study.
+- `lm/scale_150m` — ~150M language models for the suite↔LM correlation study.
 
 ## Architectures
 
@@ -51,14 +51,30 @@ uv pip install --force-reinstall nvidia-cudnn-cu12
 
 ## Quickstart
 
-```bash
-# tiny smoke test
-uv run python scripts/train.py \
-    --task induction --arch transformer --scale 1m \
-    --max_steps 200 --batch_size 64 --seq_len 128
+Every task-training run is defined by two YAMLs:
 
-# full suite dispatch
-uv run python scripts/run_suite.py --scale 1m
+- `configs/scale_<scale>/models/<arch>.yaml` — architecture + training defaults.
+- `configs/scale_<scale>/tasks.yaml` — per-task `seq_len`, `vocab_size`, and
+  `task_params`, with optional per-task overrides for training fields
+  (`lr`, `warmup_steps`, …).
+
+Merge order (lowest → highest): model YAML < `tasks.defaults` < `tasks.<name>`
+< CLI flags. Each run dumps its resolved config to `<out_dir>/<run_name>/config.yaml`
+so every artifact is self-describing.
+
+```bash
+# single run (one model, one task)
+uv run python scripts/train.py --scale 1m --model transformer --task induction
+
+# smoke test with CLI overrides
+uv run python scripts/train.py --scale 1m --model transformer --task induction \
+    --max_steps 200 --batch_size 64
+
+# sweep one model across every task in the scale's tasks.yaml
+uv run python scripts/run.py --scale 10m --model transformer
+
+# subset sweep
+uv run python scripts/run.py --scale 10m --model mamba --tasks k_hop two_hop
 ```
 
 Checkpoints and wandb artifacts are written under
@@ -75,7 +91,7 @@ in-context-learning downstream tasks.
 ### Running
 
 ```bash
-uv run python scripts/train_lm.py configs/lm/mechbench-10m.yaml
+uv run python scripts/train_lm.py configs/lm/scale_10m/mechbench.yaml
 ```
 
 The example YAML trains an 8-layer attention-only 10M-param model on a C4
@@ -89,7 +105,7 @@ Any trailing `key=value` arguments are applied as OmegaConf dotlist
 overrides on top of the YAML:
 
 ```bash
-uv run python scripts/train_lm.py configs/lm/mechbench-10m.yaml \
+uv run python scripts/train_lm.py configs/lm/scale_10m/mechbench.yaml \
     optimizer.learning_rate=1e-4 \
     max_duration=500 \
     model.block_types='[mamba,mamba,mamba,mamba,mamba,mamba,mamba,mamba]'
@@ -104,7 +120,7 @@ for dry configs on machines without the full dataset mount).
 checkpoint, without training:
 
 ```bash
-uv run python scripts/eval_lm.py configs/lm/mechbench-10m.yaml \
+uv run python scripts/eval_lm.py configs/lm/scale_10m/mechbench.yaml \
     /scratch/gpfs/EHAZAN/tharuntk/mechbench-lm/runs/mechbench-10m-attn/step1000/model.pt
 ```
 

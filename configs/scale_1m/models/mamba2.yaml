@@ -1,0 +1,37 @@
+# Mamba-2 (SSD) at ~1M params.
+# Param count: 989,910  (-1.01% of 1,000,000)
+#
+# Mamba-2 has tight divisibility: d_inner = expand*d_model must be divisible
+# by headdim (64). With expand=2, valid d_model is multiples of 32. d=96 at
+# d_state=128 undershoots (-16.5%) and d=128 overshoots (+40.6%). Pick d=96
+# and raise d_state to 256 to absorb the budget — Mamba-2 makes large d_state
+# cheap via SSD. Compare mamba.yaml (Mamba-1, d_state=16) which is paper-
+# faithful for that architecture.
+
+arch: mamba2
+scale: 1m
+
+batch_size: 128
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 96
+  n_heads: 4
+  mlp_hidden_mult: 2.0
+  block_types: [mamba2, mamba2, mamba2, mamba2, mamba2, mamba2]
+  d_state: 256
+  d_conv: 4
+  mamba_expand: 2
+  mamba2_headdim: 64
+  mamba2_chunk_size: 256
+  tie_embeddings: true
+  dropout: 0.0

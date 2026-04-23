@@ -91,7 +91,7 @@ def evaluate(model: MechModel, task_fn, rng, cfg: TrainConfig, spec: TaskSpec, d
     return {"tok_acc": tok_acc, "seq_acc": seq_acc, "eval_loss": eval_loss, "eval_ppl": eval_ppl}
 
 
-def train_loop(cfg: TrainConfig, model_cfg: MechConfig):
+def train_loop(cfg: TrainConfig, model_cfg: MechConfig, task_fn=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)
@@ -118,7 +118,8 @@ def train_loop(cfg: TrainConfig, model_cfg: MechConfig):
     )
     scheduler = cosine_with_warmup(optim, cfg.warmup_steps, cfg.max_steps)
 
-    task_fn = get_task(cfg.task)
+    if task_fn is None:
+        task_fn = get_task(cfg.task)
     spec = TaskSpec(name=cfg.task, seq_len=cfg.seq_len, vocab_size=cfg.vocab_size)
     train_rng = np.random.default_rng(cfg.seed)
     eval_rng = np.random.default_rng(cfg.seed + 1)
