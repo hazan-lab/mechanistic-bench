@@ -53,8 +53,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--dry_run", action="store_true",
                    help="Print the commands that would run, then exit.")
     p.add_argument("--extra", nargs=argparse.REMAINDER, default=[],
-                   help="All remaining args forwarded to each train.py invocation "
-                        "(e.g. --extra --max_steps 50 --wandb)")
+                   help="All remaining args (must come last on the command line) "
+                        "forwarded to each train.py invocation "
+                        "(e.g. --extra --max_steps 50 --wandb). "
+                        "Do not pass --out_dir here; use the top-level --out_dir "
+                        "so --skip_existing checks the right directory.")
     return p.parse_args()
 
 
@@ -71,6 +74,12 @@ def main() -> None:
     if unknown:
         raise SystemExit(
             f"Tasks not listed in configs/scale_{args.scale}/tasks.yaml: {sorted(unknown)}"
+        )
+
+    if "--out_dir" in (args.extra or []):
+        raise SystemExit(
+            "--out_dir must be supplied at the run.py level, not inside --extra "
+            "(otherwise --skip_existing checks the wrong directory)."
         )
 
     arch = _arch_for(args.scale, args.model)

@@ -104,8 +104,12 @@ def _resolve_configs(args: argparse.Namespace) -> tuple[TrainConfig, MechConfig,
     for k, v in model_cfg_raw.items():
         if k == "model":
             continue
-        if k in tc_kwargs:
-            tc_kwargs[k] = v
+        if k not in tc_kwargs:
+            raise ValueError(
+                f"Unknown top-level key {k!r} in {model_yaml_path} "
+                f"(not a TrainConfig field and not 'model')"
+            )
+        tc_kwargs[k] = v
 
     # Layer 2: tasks.defaults.
     for k, v in task_defaults.items():
