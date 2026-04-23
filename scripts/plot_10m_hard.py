@@ -253,16 +253,17 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--sweep_root", default="/scratch/gpfs/EHAZAN/tharuntk/mechbench/sweep_10m_hard")
     p.add_argument("--out", default="figures/10m_multiarch")
-    p.add_argument("--tasks_config", default="configs/tasks_10m_hard.json",
-                   help="Used to determine task order. Non-underscore keys only.")
+    p.add_argument("--tasks_config", default="configs/scale_10m/tasks.yaml",
+                   help="Used to determine task order. Reads the tasks: mapping.")
     args = p.parse_args()
 
     sweep_root = Path(args.sweep_root)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    cfg = json.loads(Path(args.tasks_config).read_text())
-    tasks = [t for t in cfg.keys() if not t.startswith("_")]
+    import yaml
+    doc = yaml.safe_load(Path(args.tasks_config).read_text()) or {}
+    tasks = list((doc.get("tasks") or {}).keys())
 
     runs = discover_runs(sweep_root)
     present_archs = sorted({a for (_, a) in runs.keys()}, key=lambda x: ARCH_ORDER.index(x) if x in ARCH_ORDER else 99)

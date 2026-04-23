@@ -1,23 +1,15 @@
-# Layer-wise attention/mamba hybrid at ~1M params (scale_1m).
+# Layer-wise attention/mamba hybrid at ~1M params.
 # Alternating attn/mamba blocks: [attn, mamba, attn, mamba, attn, mamba].
 # Param count: 1,010,760  (+1.08% of 1,000,000)
-# Param-matched against the other scale_1m/*.yaml configs.
-# Data settings (task/seq_len/vocab/batch/steps) are identical across all.
 
 arch: alt_attn_mamba
 scale: 1m
 
-# --- data ---
-task: induction
-seq_len: 256
-vocab_size: 64
 batch_size: 128
 eval_batch_size: 256
-
-# --- training ---
+eval_every: 200
 max_steps: 4000
 warmup_steps: 200
-eval_every: 200
 lr: 3.0e-4
 weight_decay: 0.1
 grad_clip: 1.0
@@ -25,7 +17,6 @@ dtype: bf16
 seed: 42
 log_every: 50
 
-# --- model (overrides arch_preset) ---
 model:
   d_model: 120
   n_heads: 4

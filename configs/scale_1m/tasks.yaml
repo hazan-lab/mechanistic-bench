@@ -1,0 +1,95 @@
+# Per-task settings at 1m scale.
+#
+# Merge order (lowest → highest precedence):
+#   model YAML defaults  <  tasks.defaults  <  tasks.<name>  <  CLI flags
+#
+# Task-only fields: seq_len, vocab_size, task_params (kwargs forwarded to the
+# task generator via functools.partial).
+# Overridable training fields: lr, warmup_steps, max_steps, batch_size,
+# eval_batch_size, eval_every, weight_decay, grad_clip, dtype, seed, log_every.
+#
+# At 1m all tasks use generator defaults — task_params is intentionally empty.
+# Matches what scripts/run_suite.py was dispatching before this refactor.
+
+defaults:
+  seq_len: 256
+  vocab_size: 64
+  task_params: {}
+
+tasks:
+  # retrieval
+  copy: {}
+  copy_offset: {}
+  reverse_copy: {}
+  induction: {}
+  induction_gap: {}
+  multi_induction: {}
+  associative: {}
+  short_associative: {}
+  selective_copy: {}
+  needle: {}
+
+  # aggregation
+  counting: {}
+  parity: {}
+  cumulative_sum: {}
+  state_tracking: {}
+  mode: {}
+  sort: {}
+
+  # extended reasoning
+  pattern_completion: {}
+  compress: {}
+  interleave: {}
+  longest_run: {}
+  threshold: {}
+  token_transition: {}
+  noisy_copy: {}
+  running_max: {}
+  selective_parity: {}
+  multi_state_tracking: {}
+  state_retrieve: {}
+  copy_count: {}
+
+  # vision (raster-flattened 2D)
+  grid_retrieval: {}
+  col_parity: {}
+  patch_match: {}
+
+  # continuous
+  delayed_echo: {}
+  piecewise_denoise: {}
+  nearest_key: {}
+
+  # parallel retrieval / multi-hop
+  batch_recall: {}
+  two_hop: {}
+  mode_tagged: {}
+  conditional_recall: {}
+  first_vs_last: {}
+  triple_recall: {}
+  nested_lookup: {}
+  three_hop: {}
+  quad_recall: {}
+  last_tagged: {}
+  hop_distance_bucket: {}
+  batch_two_hop: {}
+  dual_hop_retrieve: {}
+  union_lookup: {}
+  nested_3_hop: {}
+  dual_query_hop: {}
+  deep_hop: {}
+  k_hop: {}
+
+  # grid + video
+  grid_two_coord: {}
+  grid_three_coord: {}
+  grid_multihop: {}
+  variable_lookup: {}
+  sort_top2: {}
+  set_intersection_count: {}
+  temporal_ordering: {}
+  substring_locate: {}
+  assignment_chain: {}
+  video_frame_retrieval: {}
+  video_cell_mode: {}

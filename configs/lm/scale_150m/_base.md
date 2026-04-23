@@ -18,10 +18,10 @@ bf16 autocast, `device_train_microbatch_size=8` (→ 64× grad accumulation).
 Checkpoints and history land in
 `/scratch/gpfs/EHAZAN/tharuntk/mechbench-lm/runs/${run_name}`.
 
-**Evaluators** (same set as `mechbench-10m.yaml`): LM perplexity on
-`c4_en` and `wikitext_103` validation memmaps; ICL downstream on `piqa`
-and `hellaswag`.
+**Evaluators** (same set as `configs/lm/scale_10m/mechbench.yaml`): LM
+perplexity on `c4_en` and `wikitext_103` validation memmaps; ICL downstream
+on `piqa` and `hellaswag`.
 
 Re-measure param counts with `uv run python scripts/tune_150m.py`.
 
-Run: `uv run python scripts/train_lm.py configs/lm/150m/<arch>.yaml`
+Run: `uv run python scripts/train_lm.py configs/lm/scale_150m/<arch>.yaml`

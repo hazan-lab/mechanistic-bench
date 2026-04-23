@@ -5,7 +5,7 @@
 # downstream ICL tasks (piqa, hellaswag).
 #
 # Run with:
-#   uv run python scripts/train_lm.py configs/lm/mechbench-10m.yaml
+#   uv run python scripts/train_lm.py configs/lm/scale_10m/mechbench.yaml
 #
 # Any ``key=value`` overrides supplied after the YAML path are merged on top
 # via OmegaConf dotlists (e.g. ``optimizer.learning_rate=1e-4``).

@@ -11,9 +11,9 @@ from mechbench.models.model import build_model
 
 
 CONFIGS = [
-    "configs/lm/150m/attn.yaml",
-    "configs/lm/150m/mamba.yaml",
-    "configs/lm/150m/alt_attn_mamba.yaml",
+    "configs/lm/scale_150m/attn.yaml",
+    "configs/lm/scale_150m/mamba.yaml",
+    "configs/lm/scale_150m/alt_attn_mamba.yaml",
 ]
 
 TARGET = 150_000_000

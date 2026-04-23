@@ -1,0 +1,25 @@
+# LSTM at ~10M params.
+# Matches arch_preset("lstm", "10m"): d_model=320, 8 layers.
+
+arch: lstm
+scale: 10m
+
+batch_size: 64
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 320
+  n_heads: 8
+  mlp_hidden_mult: 2.0
+  block_types: [lstm, lstm, lstm, lstm, lstm, lstm, lstm, lstm]
+  tie_embeddings: true
+  dropout: 0.0
