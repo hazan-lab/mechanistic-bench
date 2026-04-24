@@ -102,6 +102,8 @@ def _build_mixer(block_type: str, cfg: MechConfig) -> nn.Module:
             mamba_variant=cfg.headwise_mamba_variant,
             mamba2_headdim=cfg.mamba2_headdim,
             mamba2_chunk_size=cfg.mamba2_chunk_size,
+            num_eigh=cfg.num_eigh,
+            use_hankel_L=cfg.use_hankel_L,
         )
     raise ValueError(f"Unknown block_type '{block_type}'")
 

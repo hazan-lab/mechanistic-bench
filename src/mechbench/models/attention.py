@@ -67,10 +67,12 @@ class CausalSelfAttention(nn.Module):
 
 
 class MultiBranchHeadMixer(nn.Module):
-    """Head-wise hybrid: split heads between attention and a Mamba branch.
+    """Head-wise hybrid: split heads between attention and a sequence-mixer branch.
 
-    For parameter-matching we run attention on ``n_attn_heads`` heads and
-    Mamba on the remaining ``n_heads - n_attn_heads`` heads, then concat.
+    For parameter-matching we run attention on ``n_attn_heads`` heads and the
+    chosen mixer on the remaining ``n_heads - n_attn_heads`` heads, then concat.
+    The branch mixer is selected by ``mamba_variant`` (historical name):
+    ``"mamba"`` (default), ``"mamba2"``, or ``"stu"``.
     """
 
     def __init__(
@@ -88,6 +90,8 @@ class MultiBranchHeadMixer(nn.Module):
         mamba_variant: str = "mamba",
         mamba2_headdim: int = 64,
         mamba2_chunk_size: int = 256,
+        num_eigh: int = 24,
+        use_hankel_L: bool = False,
     ):
         super().__init__()
         assert 0 < n_attn_heads < n_heads, "n_attn_heads must be between 1 and n_heads-1"
@@ -114,6 +118,14 @@ class MultiBranchHeadMixer(nn.Module):
                 expand=mamba_expand,
                 headdim=mamba2_headdim,
                 chunk_size=mamba2_chunk_size,
+            )
+        elif mamba_variant == "stu":
+            from .stu import STUBlock
+            self.mamba = STUBlock(
+                self.mamba_dim,
+                seq_len=max_seq_len,
+                num_eigh=num_eigh,
+                use_hankel_L=use_hankel_L,
             )
         else:
             from .mamba import MambaBlock

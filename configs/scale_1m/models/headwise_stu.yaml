@@ -1,0 +1,36 @@
+# Head-wise attention/STU hybrid at ~1M params.
+# Each block splits heads between attention (n_attn_heads) and an STU branch
+# running on the remaining heads. Mirrors the attn+Mamba headwise setup.
+# Param count: 928,384  (-7.16% of 1,000,000)
+#
+# d=128 is the closest-to-budget choice that also keeps RoPE-friendly even
+# head_dim (=32). d=144 overshoots by +17%.
+
+arch: headwise_stu
+scale: 1m
+
+batch_size: 128
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 128
+  n_heads: 4
+  n_attn_heads: 2
+  mlp_hidden_mult: 2.0
+  block_types: [headwise, headwise, headwise, headwise, headwise, headwise]
+  rope: true
+  use_flash: true
+  headwise_mamba_variant: stu
+  num_eigh: 24
+  use_hankel_L: false
+  tie_embeddings: true
+  dropout: 0.0
