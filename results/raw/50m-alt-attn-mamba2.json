@@ -1,0 +1,83 @@
+{
+  "config": "configs/lm/scale_50m/alt_attn_mamba2.yaml",
+  "checkpoint": "/scratch/gpfs/EHAZAN/tharuntk/mechbench-lm/runs/mechbench-50m-alt-attn-mamba2/step954/model.pt",
+  "results": {
+    "piqa": {
+      "metrics": {
+        "eval/downstream/piqa_len_norm": 0.5462459325790405
+      },
+      "seconds": 11.70266342163086,
+      "ok": true
+    },
+    "hellaswag": {
+      "metrics": {
+        "eval/downstream/hellaswag_len_norm": 0.25532761216163635
+      },
+      "seconds": 63.730185747146606,
+      "ok": true
+    },
+    "winogrande": {
+      "metrics": {
+        "eval/downstream/winogrande_acc": 0.503551721572876
+      },
+      "seconds": 3.9746365547180176,
+      "ok": true
+    },
+    "openbook_qa": {
+      "metrics": {
+        "eval/downstream/openbook_qa_len_norm": 0.26600000262260437
+      },
+      "seconds": 3.064821243286133,
+      "ok": true
+    },
+    "sciq": {
+      "metrics": {
+        "eval/downstream/sciq_acc": 0.26899999380111694
+      },
+      "seconds": 6.874963760375977,
+      "ok": true
+    },
+    "arc_easy": {
+      "metrics": {
+        "eval/downstream/arc_easy_acc": 0.3052631616592407
+      },
+      "seconds": 4.1987624168396,
+      "ok": true
+    },
+    "commonsense_qa": {
+      "metrics": {
+        "eval/downstream/commonsense_qa_len_norm": 0.23423422873020172
+      },
+      "seconds": 9.50491189956665,
+      "ok": true
+    },
+    "social_iqa": {
+      "metrics": {
+        "eval/downstream/social_iqa_len_norm": 0.39252814650535583
+      },
+      "seconds": 8.87061333656311,
+      "ok": true
+    },
+    "arc_easy_ppl": {
+      "metrics": {
+        "eval/downstream_ce_loss/arc_easy_ppl_ce_loss": 1.703673243522644
+      },
+      "seconds": 0.9474585056304932,
+      "ok": true
+    },
+    "trivia_qa_wiki_ppl": {
+      "metrics": {
+        "eval/downstream_ce_loss/trivia_qa_wiki_ppl_ce_loss": 2.5219228267669678
+      },
+      "seconds": 13.299699544906616,
+      "ok": true
+    },
+    "natural_qs_open_ppl": {
+      "metrics": {
+        "eval/downstream_ce_loss/natural_qs_open_ppl_ce_loss": 2.149268627166748
+      },
+      "seconds": 5.6159827709198,
+      "ok": true
+    }
+  }
+}
