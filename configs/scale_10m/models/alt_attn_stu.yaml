@@ -1,0 +1,33 @@
+# Layer-wise attention/STU hybrid at ~10M params.
+# Alternating attn/stu blocks, 8 layers total.
+# Param count: 10,094,976  (+0.95% of 10,000,000)
+#
+# d=384 with n_heads=8 gives head_dim=48 (even, RoPE-compatible), landing
+# almost exactly on the 10M budget.
+
+arch: alt_attn_stu
+scale: 10m
+
+batch_size: 64
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 384
+  n_heads: 8
+  mlp_hidden_mult: 2.0
+  block_types: [attn, stu, attn, stu, attn, stu, attn, stu]
+  rope: true
+  use_flash: true
+  num_eigh: 24
+  use_hankel_L: false
+  tie_embeddings: true
+  dropout: 0.0
