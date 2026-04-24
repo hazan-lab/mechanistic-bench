@@ -1,0 +1,35 @@
+# Head-wise attention/STU hybrid at ~10M params.
+# Each block splits heads between attention (4) and STU (4).
+# Param count: 9,231,200  (-7.69% of 10,000,000)
+#
+# d=352 lands -7.7%; d=384 overshoots +9.8% — pick the slightly-under choice
+# to stay under budget. head_dim=44 (even, RoPE-compatible).
+
+arch: headwise_stu
+scale: 10m
+
+batch_size: 64
+eval_batch_size: 256
+eval_every: 200
+max_steps: 4000
+warmup_steps: 200
+lr: 3.0e-4
+weight_decay: 0.1
+grad_clip: 1.0
+dtype: bf16
+seed: 42
+log_every: 50
+
+model:
+  d_model: 352
+  n_heads: 8
+  n_attn_heads: 4
+  mlp_hidden_mult: 2.0
+  block_types: [headwise, headwise, headwise, headwise, headwise, headwise, headwise, headwise]
+  rope: true
+  use_flash: true
+  headwise_mamba_variant: stu
+  num_eigh: 24
+  use_hankel_L: false
+  tie_embeddings: true
+  dropout: 0.0
