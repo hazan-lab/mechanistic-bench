@@ -249,11 +249,15 @@ class LMModelConfig(BaseConfig):
     d_state: int = 16
     d_conv: int = 4
     mamba_expand: int = 2
+    # mamba-2 hyperparams
+    mamba2_headdim: int = 64
+    mamba2_chunk_size: int = 256
     # attention opts
     rope: bool = True
     use_flash: bool = True
     # headwise hybrid
     n_attn_heads: int = 2
+    headwise_mamba_variant: str = "mamba"  # "mamba" or "mamba2"
     # regularization / embedding
     dropout: float = 0.0
     tie_embeddings: bool = True
@@ -272,9 +276,12 @@ class LMModelConfig(BaseConfig):
             d_state=self.d_state,
             d_conv=self.d_conv,
             mamba_expand=self.mamba_expand,
+            mamba2_headdim=self.mamba2_headdim,
+            mamba2_chunk_size=self.mamba2_chunk_size,
             rope=self.rope,
             use_flash=self.use_flash,
             n_attn_heads=self.n_attn_heads,
+            headwise_mamba_variant=self.headwise_mamba_variant,
             dropout=self.dropout,
             tie_embeddings=self.tie_embeddings,
         )
