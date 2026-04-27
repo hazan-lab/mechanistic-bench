@@ -1,0 +1,95 @@
+# 50M LM, seq_len=8192, 2× Chinchilla (~2B tokens). Same step count (477) as seq=4096
+# Identical architecture to scale_50m/mamba2.yaml (d_model=384, mlp_hidden_mult=3.25,
+# d_state=256, headdim=64 -> 49.70M); only seq_len (4096->8192), microbatch (8->4), and step-count are retuned for 8192.
+
+run_name: mechbench-50m-seq8192-mamba2
+seed: 6198
+
+model:
+  vocab_size: 50304
+  d_model: 384
+  n_heads: 12
+  max_seq_len: 8192
+  block_types: [mamba2, mamba2, mamba2, mamba2, mamba2, mamba2, mamba2, mamba2, mamba2, mamba2, mamba2, mamba2]
+  mlp_hidden_mult: 3.25
+  d_state: 256
+  mamba2_headdim: 64
+  mamba2_chunk_size: 256
+  rope: true
+  use_flash: true
+  tie_embeddings: true
+  pad_token_id: 1
+  eos_token_id: 0
+
+optimizer:
+  name: adamw
+  learning_rate: 3.0e-4
+  weight_decay: 0.1
+  betas: [0.9, 0.95]
+  eps: 1.0e-8
+
+scheduler:
+  name: cosine_with_warmup
+  t_warmup: 50
+  alpha_f: 0.1
+
+tokenizer:
+  identifier: tokenizers/allenai_gpt-neox-olmo-dolma-v1_5.json
+  truncate_direction: right
+
+data:
+  pad_direction: right
+  num_workers: 2
+  drop_last: true
+  pin_memory: true
+  prefetch_factor: 2
+  persistent_workers: true
+  memmap_dtype: uint16
+  paths:
+    - /scratch/gpfs/EHAZAN/tharuntk/OLMo-data/preprocessed/c4/v1_7-dd_ngram_dp_030-qc_cc_en_bin_001-fix/gpt-neox-olmo-dolma-v1_5/part-000-00000.npy
+    - /scratch/gpfs/EHAZAN/tharuntk/OLMo-data/preprocessed/c4/v1_7-dd_ngram_dp_030-qc_cc_en_bin_001-fix/gpt-neox-olmo-dolma-v1_5/part-001-00000.npy
+    - /scratch/gpfs/EHAZAN/tharuntk/OLMo-data/preprocessed/c4/v1_7-dd_ngram_dp_030-qc_cc_en_bin_001-fix/gpt-neox-olmo-dolma-v1_5/part-002-00000.npy
+    - /scratch/gpfs/EHAZAN/tharuntk/OLMo-data/preprocessed/c4/v1_7-dd_ngram_dp_030-qc_cc_en_bin_001-fix/gpt-neox-olmo-dolma-v1_5/part-003-00000.npy
+
+save_folder: /scratch/gpfs/EHAZAN/tharuntk/mechbench-lm/runs/${run_name}
+save_interval: 100
+save_num_checkpoints_to_keep: 2
+save_overwrite: true
+
+max_duration: 477
+global_train_batch_size: 512
+device_train_microbatch_size: 4
+device_eval_batch_size: 4
+
+eval_interval: 100
+eval_subset_num_batches: 10
+
+precision: amp_bf16
+max_grad_norm: 1.0
+
+log_interval: 5
+
+evaluators:
+  - label: c4_en
+    type: lm
+    data:
+      paths:
+        - /scratch/gpfs/EHAZAN/tharuntk/OLMo-data/eval-data/perplexity/v3_small_gptneox20b/c4_en/val/part-0-00000.npy
+      memmap_dtype: uint16
+      pad_direction: right
+      drop_last: false
+
+  - label: wikitext_103
+    type: lm
+    data:
+      paths:
+        - /scratch/gpfs/EHAZAN/tharuntk/OLMo-data/eval-data/perplexity/v3_small_gptneox20b/wikitext_103/val/part-0-00000.npy
+      memmap_dtype: uint16
+      pad_direction: right
+      drop_last: false
+
+  - label: piqa
+    type: downstream
+
+  - label: hellaswag
+    type: downstream
