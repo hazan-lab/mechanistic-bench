@@ -160,3 +160,29 @@ under `/scratch/gpfs/EHAZAN/tharuntk/OLMo-data/{preprocessed,eval-data}/`.
   not ported.
 - Token-valued `max_duration` (e.g. `"100000T"`) is rejected; configure
   `max_duration` as a plain step count.
+
+## Paper
+
+This suite is the screening battery from:
+
+> **Mechanistic Capability Probes as a Cheap Screen for Sequence-Mixer
+> Architectures.** Kia Ghods, Tharun Kumar Tiruppali Kalidoss, Elad Hazan.
+> ICML 2026 Workshop on Mechanistic Interpretability.
+
+The analysis scripts that produce the paper's correlation figures live in
+`analysis/` (unified 1M accuracy matrix, 50M/150M LM cross-entropy tables,
+drop-primitive ablation, rank-correlation figures), and the 5-seed
+replication of the 1M sweep is in `figures/seed_sweep/`.
+
+```bibtex
+@inproceedings{ghods2026mechprobes,
+  title     = {Mechanistic Capability Probes as a Cheap Screen for Sequence-Mixer Architectures},
+  author    = {Ghods, Kia and Tiruppali Kalidoss, Tharun Kumar and Hazan, Elad},
+  booktitle = {ICML Workshop on Mechanistic Interpretability},
+  year      = {2026}
+}
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
