@@ -166,7 +166,7 @@ under `/scratch/gpfs/EHAZAN/tharuntk/OLMo-data/{preprocessed,eval-data}/`.
 This suite is the screening battery from:
 
 > **Mechanistic Capability Probes as a Cheap Screen for Sequence-Mixer
-> Architectures.** Kia Ghods, Tharun Kumar Tiruppali Kalidoss, Elad Hazan.
+> Architectures.** Tharun Kumar Tiruppali Kalidoss, Kia Ghods, Elad Hazan.
 > ICML 2026 Workshop on Mechanistic Interpretability.
 
 The analysis scripts that produce the paper's correlation figures live in
@@ -175,9 +175,9 @@ drop-primitive ablation, rank-correlation figures), and the 5-seed
 replication of the 1M sweep is in `figures/seed_sweep/`.
 
 ```bibtex
-@inproceedings{ghods2026mechprobes,
+@inproceedings{tiruppalikalidoss2026mechprobes,
   title     = {Mechanistic Capability Probes as a Cheap Screen for Sequence-Mixer Architectures},
-  author    = {Ghods, Kia and Tiruppali Kalidoss, Tharun Kumar and Hazan, Elad},
+  author    = {Tiruppali Kalidoss, Tharun Kumar and Ghods, Kia and Hazan, Elad},
   booktitle = {ICML Workshop on Mechanistic Interpretability},
   year      = {2026}
 }
