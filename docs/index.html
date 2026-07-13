@@ -5,171 +5,279 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mechanistic Capability Probes as a Cheap Screen for Sequence-Mixer Architectures</title>
 <meta name="description" content="A 1M-parameter sweep on synthetic mechanistic probes ranks sequence-mixer architectures the same way a 150M or 1B pretraining run would. ICML 2026 Mechanistic Interpretability Workshop.">
+<meta property="og:title" content="Mechanistic Capability Probes as a Cheap Screen for Sequence-Mixer Architectures">
+<meta property="og:description" content="Cheap mechanistic probes at 1M parameters predict which sequence-mixer architecture wins at 1B — before you pay for the run.">
+<meta property="og:type" content="website">
 <style>
   :root{
-    --bg:#ffffff; --ink:#1a1a1a; --muted:#555; --rule:#dddddd; --link:#1a4fa0;
+    --bg:#ffffff; --surface:#f6f7f9; --surface-2:#eef0f3; --border:#e2e5ea;
+    --ink:#14161a; --muted:#5b6270; --faint:#878e9c;
+    --accent:#2a5bd7; --accent-soft:#eef2fb;
+    --maxw:900px;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#15171a; --ink:#e6e6e6; --muted:#a0a4aa; --rule:#33363c; --link:#7fa8e6; }
+    :root{
+      --bg:#0e1116; --surface:#161a21; --surface-2:#1c212b; --border:#282f3b;
+      --ink:#e9ecf1; --muted:#a3abba; --faint:#7b8494;
+      --accent:#6d9bff; --accent-soft:#182034;
+    }
   }
+  *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
     margin:0; background:var(--bg); color:var(--ink);
-    font:16px/1.65 Georgia,"Times New Roman",serif;
-    padding:0 20px;
+    font:400 17px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
   }
-  .page{max-width:760px; margin:0 auto; padding:52px 0 80px}
-  a{color:var(--link); text-decoration:none}
+  a{color:var(--accent); text-decoration:none}
   a:hover{text-decoration:underline}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
 
-  h1{
-    font-size:27px; line-height:1.28; font-weight:700; text-align:center;
-    margin:0 0 22px;
+  header{border-bottom:1px solid var(--border); padding:58px 0 38px}
+  .venue{
+    display:inline-block; font-size:13px; font-weight:600; letter-spacing:.03em;
+    color:var(--muted); border:1px solid var(--border); padding:5px 12px;
+    border-radius:999px; margin-bottom:20px;
   }
-  .authors{text-align:center; font-size:18px; margin:0 0 4px}
-  .affil{text-align:center; color:var(--muted); font-size:15px; margin:0 0 3px}
-  .venue{text-align:center; color:var(--muted); font-size:15px; margin:0 0 18px}
-  .equal{text-align:center; color:var(--muted); font-size:13.5px; margin:0 0 20px}
-  .links{text-align:center; font-size:16px; margin:0 0 6px}
-  .links a{margin:0 4px}
-  .sep{color:var(--muted)}
+  h1{
+    font-size:clamp(26px,4.4vw,39px); line-height:1.16; font-weight:700;
+    letter-spacing:-.012em; margin:0 0 20px;
+  }
+  .authors{font-size:18px; margin:0 0 4px; font-weight:500}
+  .authors a{color:var(--ink)}
+  .affil{color:var(--muted); font-size:15px; margin:0 0 4px}
+  .equal{color:var(--faint); font-size:14px; margin:0 0 24px}
+  .btns{display:flex; flex-wrap:wrap; gap:10px}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--ink); color:var(--bg); font-weight:600; font-size:15px;
+    padding:9px 16px; border-radius:9px; border:1px solid var(--ink);
+  }
+  .btn:hover{text-decoration:none; opacity:.9}
+  .btn.alt{background:transparent; color:var(--ink); border-color:var(--border)}
+  .btn svg{width:16px;height:16px;fill:currentColor;flex:none}
 
-  hr{border:0; border-top:1px solid var(--rule); margin:34px 0}
-
-  h2{font-size:20px; font-weight:700; margin:34px 0 12px}
+  section{padding:42px 0; border-bottom:1px solid var(--border)}
+  h2{font-size:23px; font-weight:700; letter-spacing:-.01em; margin:0 0 16px}
   p{margin:0 0 15px}
 
-  figure{margin:26px 0}
-  figure img{width:100%; height:auto; display:block; margin:0 auto; background:#fff}
-  figcaption{font-size:14px; color:var(--muted); margin-top:9px; line-height:1.5}
-
-  ul{margin:0 0 15px; padding-left:22px}
-  li{margin:0 0 8px}
-
-  pre{
-    background:transparent; border:1px solid var(--rule); border-radius:4px;
-    padding:14px 15px; overflow-x:auto;
-    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; line-height:1.5;
-    color:var(--ink);
+  .tldr{
+    background:var(--surface); border:1px solid var(--border);
+    border-left:3px solid var(--accent); border-radius:10px; padding:18px 20px;
   }
-  .footer{color:var(--muted); font-size:14px; margin-top:36px}
+  .tldr p{margin:0}
+  .tldr b{color:var(--accent)}
+
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:24px}
+  .stat{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:17px 16px;
+  }
+  .stat .n{font-size:27px; font-weight:700; letter-spacing:-.02em; color:var(--accent)}
+  .stat .l{font-size:13.5px; color:var(--muted); margin-top:5px; line-height:1.4}
+  @media (max-width:620px){ .stats{grid-template-columns:1fr} }
+
+  figure{margin:24px 0 6px}
+  figure img{
+    width:100%; height:auto; display:block; border-radius:10px;
+    border:1px solid var(--border); background:#fff; padding:10px;
+  }
+  figcaption{font-size:14.5px; color:var(--muted); margin-top:11px; line-height:1.5}
+  .fig-narrow{max-width:540px; margin:24px auto 6px}
+
+  ul.clean{margin:0; padding-left:22px}
+  ul.clean li{margin:0 0 9px}
+
+  .cite-wrap{position:relative}
+  pre{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+    padding:18px; overflow-x:auto; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13.5px; line-height:1.55; color:var(--ink); margin:0;
+  }
+  .copy{
+    position:absolute; top:12px; right:12px; cursor:pointer;
+    background:var(--bg); color:var(--muted); border:1px solid var(--border);
+    border-radius:7px; padding:5px 11px; font-size:13px; font-weight:600;
+  }
+  .copy:hover{color:var(--ink)}
+
+  footer{padding:32px 0 56px; color:var(--faint); font-size:14px}
+  footer a{color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="page">
 
-  <h1>Mechanistic Capability Probes as a Cheap Screen<br>for Sequence-Mixer Architectures</h1>
+<header>
+  <div class="wrap">
+    <span class="venue">ICML 2026 · Mechanistic Interpretability Workshop</span>
+    <h1>Mechanistic Capability Probes as a Cheap Screen for Sequence-Mixer Architectures</h1>
+    <p class="authors">
+      Tharun Kumar Tiruppali Kalidoss<sup>*</sup> &nbsp;·&nbsp;
+      Kia Ghods<sup>*</sup> &nbsp;·&nbsp;
+      <a href="https://www.ehazan.com/">Elad Hazan</a>
+    </p>
+    <p class="affil">Department of Computer Science, Princeton University</p>
+    <p class="equal"><sup>*</sup>Equal contribution &nbsp;·&nbsp; Correspondence: tharun.tiruppali@gmail.com</p>
+    <div class="btns">
+      <a class="btn" href="paper.pdf">
+        <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5zM8 13h8v1.6H8V13zm0 3.4h8V18H8v-1.6zM8 9.6h4v1.6H8V9.6z"/></svg>
+        Paper (PDF)
+      </a>
+      <a class="btn alt" href="https://openreview.net/forum?id=oNKk2qEIOe" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 0 1 7.4 5H12V4zm-1 .1V11H4.1A8 8 0 0 1 11 4.1zM4.1 13H11v6.9A8 8 0 0 1 4.1 13zM13 19.9V13h6.9A8 8 0 0 1 13 19.9z"/></svg>
+        OpenReview
+      </a>
+      <a class="btn alt" href="https://github.com/hazan-lab/mechanistic-bench" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.9 10.9c.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7 0-.7 0-.7 1.2.1 1.8 1.2 1.8 1.2 1 .1.8 1.3 2.4 1.5.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 5 18 5.3 18 5.3c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>
+        Code
+      </a>
+      <a class="btn alt" href="#cite">
+        <svg viewBox="0 0 24 24"><path d="M9.5 5A4.5 4.5 0 0 0 5 9.5v5A4.5 4.5 0 0 0 9.5 19h1v-2h-1A2.5 2.5 0 0 1 7 14.5V13h3.5V5h-1zm8 0A4.5 4.5 0 0 0 13 9.5v5a4.5 4.5 0 0 0 4.5 4.5h1v-2h-1a2.5 2.5 0 0 1-2.5-2.5V13H18.5V5h-1z"/></svg>
+        BibTeX
+      </a>
+    </div>
+  </div>
+</header>
 
-  <p class="authors">
-    Tharun Kumar Tiruppali Kalidoss<sup>*</sup> &nbsp; Kia Ghods<sup>*</sup> &nbsp;
-    <a href="https://www.ehazan.com/">Elad Hazan</a>
-  </p>
-  <p class="affil">Department of Computer Science, Princeton University</p>
-  <p class="venue">ICML 2026 Workshop on Mechanistic Interpretability</p>
-  <p class="equal"><sup>*</sup>Equal contribution. Correspondence: tharun.tiruppali@gmail.com</p>
+<section>
+  <div class="wrap">
+    <div class="tldr">
+      <p><b>TL;DR.</b> A 1M-parameter sweep on synthetic mechanistic capability probes ranks dense
+      sequence-mixer architectures the same way a 150M — or 1B — pretraining run would, so you can
+      screen a new architecture in GPU-minutes instead of GPU-days. The per-task profile motivated
+      Hydra, a multi-head block that matches or beats a parameter-matched 1B OLMo-2 baseline.</p>
+    </div>
+  </div>
+</section>
 
-  <p class="links">
-    <a href="paper.pdf">Paper</a> <span class="sep">·</span>
-    <a href="https://openreview.net/forum?id=oNKk2qEIOe">OpenReview</a> <span class="sep">·</span>
-    <a href="https://github.com/hazan-lab/mechanistic-bench">Code</a> <span class="sep">·</span>
-    <a href="#citation">BibTeX</a>
-  </p>
+<section>
+  <div class="wrap">
+    <h2>Abstract</h2>
+    <p>Comparing sequence-mixer architectures at the scale where their behavior matters
+    (&geq;1B parameters) costs multiple GPU-days per run, beyond reach of most academic labs.
+    We propose a battery of mechanistic capability probes — induction, associative recall, copy,
+    finite-state tracking, parity, and others — as a cheap behavioral screen for dense
+    sequence-mixer architectures, and ask whether aggregate suite accuracy predicts downstream
+    language-model training cross-entropy. On a held-out set of four architectures at 150M parameters
+    we find Spearman &rho;&nbsp;=&nbsp;&minus;0.80 and Pearson r&nbsp;=&nbsp;&minus;0.97; the screen is
+    robust to dropping any single task family, to the choice of aggregation rule, and — in a five-seed
+    replication — to seed variation; the small-scale ranking direction is preserved at 1B on the two
+    architectures we ran. Per-task profiles motivate Hydra, a multi-head block that places attention,
+    STU, and Mamba mixers as parallel heads within each layer; Hydra matches or beats a
+    parameter-matched 1B OLMo-2 attention baseline on training cross-entropy and on a majority of
+    zero-shot benchmarks.</p>
+    <div class="stats">
+      <div class="stat"><div class="n">&minus;0.97</div><div class="l">Pearson <i>r</i>, 1M probe score vs. 150M pretraining CE</div></div>
+      <div class="stat"><div class="n">~1000&times;</div><div class="l">cheaper than a 1B screening run</div></div>
+      <div class="stat"><div class="n">2.880</div><div class="l">Hydra 1B train CE vs. 2.934 for the OLMo-2 attention baseline</div></div>
+    </div>
+  </div>
+</section>
 
-  <hr>
+<section>
+  <div class="wrap">
+    <h2>The screen predicts downstream loss</h2>
+    <p>We train each architecture as a 1M-parameter model on every probe, take the task-family-weighted
+    mean accuracy as a single screening score, and correlate it against the downstream language-model
+    training cross-entropy of the same architecture scaled up. The ranking transfers: the cheap
+    small-scale score orders architectures the way the expensive run does.</p>
+    <figure>
+      <img src="assets/rank_correlation.png" alt="Scatter of 1M probe mean accuracy versus downstream training cross-entropy at 150M and 1B; both show a negative trend.">
+      <figcaption>Suite-mean accuracy at the 1M probe scale vs. downstream training cross-entropy.
+      Left: 150M held-out set (n=4), &rho;=&minus;0.80, r=&minus;0.97. Right: 1B directional check,
+      with the small-scale ranking direction preserved.</figcaption>
+    </figure>
+  </div>
+</section>
 
-  <h2>Summary</h2>
-  <p>Comparing sequence-mixer architectures at the scale where their behavior matters
-  (a billion parameters or more) costs multiple GPU-days per run, which is out of reach for
-  most academic labs. We ask a simpler question first: if we train the same architectures as
-  tiny 1M-parameter models on a battery of synthetic capability probes — induction, associative
-  recall, copy, finite-state tracking, parity, and others — does their average score tell us
-  which architecture will reach the lowest training loss once scaled up? It does. The cheap
-  1M-scale ranking matches the expensive downstream ranking closely enough to use as a screen,
-  turning a decision that used to cost GPU-days into one that costs GPU-minutes.</p>
+<section>
+  <div class="wrap">
+    <h2>Every mixer has a bottleneck</h2>
+    <p>Breaking the probe suite down by primitive family shows where each architecture fails.
+    Pure-spectral mixers (STU) collapse on retrieval while staying competitive on aggregation;
+    attention is the opposite balance. No single mixer is best everywhere — which is exactly the
+    opening for a hybrid.</p>
+    <figure>
+      <img src="assets/mechanistic_summary.png" alt="Per-family accuracy bars for six architectures across retrieval, aggregation, and compound tasks.">
+      <figcaption>Per-family accuracy across probe-scale architectures. Pure STU and STU-sandwich
+      collapse on retrieval (13&ndash;40%), while aggregation differences stay within ~5 points across
+      all architectures.</figcaption>
+    </figure>
+  </div>
+</section>
 
-  <h2>Abstract</h2>
-  <p>We propose a battery of mechanistic capability probes as a cheap behavioral screen for dense
-  sequence-mixer architectures, and ask whether aggregate suite accuracy predicts downstream
-  language-model training cross-entropy. On a held-out set of four architectures at 150M parameters
-  we find Spearman &rho;&nbsp;=&nbsp;&minus;0.80 and Pearson r&nbsp;=&nbsp;&minus;0.97; the screen is
-  robust to dropping any single task family, to the choice of aggregation rule, and — in a five-seed
-  replication — to seed variation; the small-scale ranking direction is preserved at 1B on the two
-  architectures we ran. Per-task profiles motivate Hydra, a multi-head block that places attention,
-  STU, and Mamba mixers as parallel heads within each layer; Hydra matches or beats a
-  parameter-matched 1B OLMo-2 attention baseline on training cross-entropy and on a majority of
-  zero-shot benchmarks.</p>
+<section>
+  <div class="wrap">
+    <h2>Hydra: a profile-driven hybrid</h2>
+    <p>Because the probe profile shows attention, Mamba, and STU each own a different primitive,
+    Hydra places all three as parallel heads inside every block, so each layer can route capacity to
+    the computation that suits it. At 1B parameters, trained on OLMo-Mix-1124, Hydra reaches a lower
+    training cross-entropy than a parameter-matched OLMo-2 attention baseline and wins a majority of
+    zero-shot benchmarks.</p>
+    <figure class="fig-narrow">
+      <img src="assets/hydra-arch.png" alt="Diagram of the Hydra block with parallel attention, Mamba, and STU heads whose outputs are combined, then normalized and passed through an MLP.">
+      <figcaption>The Hydra block: parallel self-attention, Mamba, and STU-T heads, combined and passed
+      through RMSNorm and an MLP. The 1B configuration uses four of each head per block (4a4s4m).</figcaption>
+    </figure>
+  </div>
+</section>
 
-  <hr>
+<section>
+  <div class="wrap">
+    <h2>How robust is the screen?</h2>
+    <ul class="clean">
+      <li><b>Seed stability.</b> A five-seed replication of the 1M sweep moves suite means by at most
+      1.1 points and preserves the ranking on four of five seeds.</li>
+      <li><b>Drop any primitive.</b> The correlation stays negative and significant when any single
+      primitive family is removed from the score.</li>
+      <li><b>Aggregation rule.</b> Median and trimmed-mean scoring reproduce the correlations; only
+      the single-hardest-task minimum degrades them.</li>
+      <li><b>Learning rate.</b> The retrieval gap between attention and non-attention mixers holds at
+      every learning rate we tried, so it is architectural, not an optimizer artifact.</li>
+      <li><b>Outside the lineage.</b> Adding a Mamba-2 and an out-of-lineage LSTM keeps the aggregate
+      correlation strong (&rho; up to &minus;0.86), though cardinal calibration outside the family is
+      not yet trustworthy.</li>
+    </ul>
+    <figure>
+      <img src="assets/seed_variance.png" alt="Bar chart of five-seed suite means with small error bars and a chart showing the ranking is nearly identical across seeds.">
+      <figcaption>Five-seed replication of the 1M probe sweep. Left: suite means with &plusmn;1 sd
+      across seeds. Right: the cross-architecture ranking is identical on four of five seeds.</figcaption>
+    </figure>
+  </div>
+</section>
 
-  <h2>The screen predicts downstream loss</h2>
-  <p>We train each architecture as a 1M-parameter model on every probe, take the mean accuracy as a
-  single score, and correlate it against the downstream training cross-entropy of the same
-  architecture scaled up. The ranking transfers: the small-scale score orders architectures the way
-  the expensive run does.</p>
-  <figure>
-    <img src="assets/rank_correlation.png" alt="Scatter of 1M probe mean accuracy versus downstream training cross-entropy at 150M and 1B; both show a negative trend.">
-    <figcaption>Suite-mean accuracy at the 1M probe scale versus downstream training cross-entropy.
-    Left: 150M held-out set (n=4), &rho;=&minus;0.80, r=&minus;0.97. Right: 1B directional check,
-    with the small-scale ranking direction preserved.</figcaption>
-  </figure>
-
-  <h2>Every mixer has a bottleneck</h2>
-  <p>Breaking the suite down by primitive family shows where each architecture fails. Pure-spectral
-  mixers (STU) collapse on retrieval while staying competitive on aggregation; attention is the
-  opposite balance. No single mixer is best everywhere, which is what motivates a hybrid.</p>
-  <figure>
-    <img src="assets/mechanistic_summary.png" alt="Per-family accuracy bars for six architectures across retrieval, aggregation, and compound tasks.">
-    <figcaption>Per-family accuracy across probe-scale architectures. Pure STU and STU-sandwich
-    collapse on retrieval (13&ndash;40%), while aggregation differences stay within about 5 points
-    across all architectures.</figcaption>
-  </figure>
-
-  <h2>Hydra</h2>
-  <p>Because the probe profile shows attention, Mamba, and STU each own a different primitive, Hydra
-  places all three as parallel heads inside every block, so each layer can route capacity to the
-  computation that suits it. At 1B parameters, trained on OLMo-Mix-1124, Hydra reaches a lower
-  training cross-entropy than a parameter-matched OLMo-2 attention baseline (2.880 versus 2.934) and
-  wins a majority of zero-shot benchmarks.</p>
-  <figure>
-    <img src="assets/hydra-arch.png" alt="Diagram of the Hydra block with parallel attention, Mamba, and STU heads whose outputs are combined, then normalized and passed through an MLP." style="max-width:520px">
-    <figcaption>The Hydra block: parallel self-attention, Mamba, and STU-T heads, combined and passed
-    through RMSNorm and an MLP. The 1B configuration uses four of each head per block.</figcaption>
-  </figure>
-
-  <h2>Robustness</h2>
-  <ul>
-    <li>Seed stability: a five-seed replication of the 1M sweep moves suite means by at most 1.1
-    points and preserves the ranking on four of five seeds.</li>
-    <li>Dropping any single primitive family keeps the correlation negative and significant.</li>
-    <li>Median and trimmed-mean scoring reproduce the correlations; only the single-hardest-task
-    minimum degrades them.</li>
-    <li>The retrieval gap between attention and non-attention mixers holds at every learning rate we
-    tried, so it is architectural rather than an optimizer artifact.</li>
-    <li>Adding a Mamba-2 and an out-of-lineage LSTM keeps the aggregate correlation strong (up to
-    &rho;=&minus;0.86), though we do not yet trust the exact placement of architectures outside the
-    family the suite was developed on.</li>
-  </ul>
-  <figure>
-    <img src="assets/seed_variance.png" alt="Bar chart of five-seed suite means with small error bars and a chart showing the ranking is nearly identical across seeds.">
-    <figcaption>Five-seed replication of the 1M probe sweep. Left: suite means with one standard
-    deviation across seeds. Right: the cross-architecture ranking is identical on four of five seeds.</figcaption>
-  </figure>
-
-  <hr>
-
-  <h2 id="citation">Citation</h2>
-<pre>@inproceedings{tiruppalikalidoss2026mechprobes,
+<section id="cite">
+  <div class="wrap">
+    <h2>Citation</h2>
+    <div class="cite-wrap">
+      <button class="copy" id="copyBtn">Copy</button>
+<pre id="bib">@inproceedings{tiruppalikalidoss2026mechprobes,
   title     = {Mechanistic Capability Probes as a Cheap Screen for
                Sequence-Mixer Architectures},
   author    = {Tiruppali Kalidoss, Tharun Kumar and Ghods, Kia and Hazan, Elad},
   booktitle = {ICML Workshop on Mechanistic Interpretability},
   year      = {2026}
 }</pre>
+    </div>
+  </div>
+</section>
 
-  <p class="footer">Code and probe suite:
-  <a href="https://github.com/hazan-lab/mechanistic-bench">github.com/hazan-lab/mechanistic-bench</a>
-  (MIT License). Hazan Lab, Princeton University.</p>
+<footer>
+  <div class="wrap">
+    <p>Code &amp; probe suite: <a href="https://github.com/hazan-lab/mechanistic-bench">github.com/hazan-lab/mechanistic-bench</a>
+    · MIT License · Hazan Lab, Princeton University.</p>
+  </div>
+</footer>
 
-</div>
+<script>
+  var cb = document.getElementById('copyBtn');
+  cb.addEventListener('click', function(){
+    var t = document.getElementById('bib').innerText;
+    navigator.clipboard.writeText(t).then(function(){
+      cb.textContent = 'Copied'; setTimeout(function(){ cb.textContent = 'Copy'; }, 1600);
+    });
+  });
+</script>
 </body>
 </html>
